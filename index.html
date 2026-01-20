@@ -370,12 +370,41 @@
         onSnapshot(doc(db, "games", id), (snap) => {
             const grid = document.getElementById('live-scoreboard-grid');
             let card = document.getElementById(`hub-card-${id}`);
-            if(!card) { card = document.createElement('div'); card.id = `hub-card-${id}`; card.className = 'hub-card'; grid.appendChild(card); }
+
+            if(!card) { 
+                card = document.createElement('div'); 
+                card.id = `hub-card-${id}`; 
+                card.className = 'hub-card'; 
+                grid.appendChild(card); 
+            }
+
             if(snap.exists()){
                 const d = snap.data();
-                card.innerHTML = `<div style="flex:1"><div style="font-size:0.7rem; color:#888;">場地 ${id}</div><div style="font-weight:bold;">${d.nameA} vs ${d.nameB}</div><div style="font-size:0.7rem; color:var(--secondary);">裁判: ${d.judgeName || '無'}</div></div><div style="text-align:right;"><div style="font-size:1.4rem; font-weight:900; color:var(--primary);">${d.scoreA} : ${d.scoreB}</div><div style="font-size:0.7rem; background:#eee; padding:2px 5px; border-radius:4px;">Set ${d.currentSet}</div></div>`;
-                card.style.display = (d.nameA === "準備中") ? "none" : "flex";
+                const isReady = (d.nameA === "準備中");
+
+                // 修改後的顯示邏輯：即使是準備中也顯示，並調整樣式區分
+                card.innerHTML = `
+                    <div style="flex:1">
+                        <div style="font-size:0.7rem; color:#888;">場地 ${id}</div>
+                        <div style="font-weight:bold; color:${isReady ? '#95a5a6' : 'var(--text-main)'};">
+                            ${d.nameA} ${isReady ? '' : 'vs ' + d.nameB}
+                        </div>
+                        <div style="font-size:0.7rem; color:var(--secondary);">
+                            ${isReady ? '等待開賽' : '裁判: ' + (d.judgeName || '無')}
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:1.4rem; font-weight:900; color:${isReady ? '#ccc' : 'var(--primary)'};">
+                            ${d.scoreA} : ${d.scoreB}
+                        </div>
+                        <div style="font-size:0.7rem; background:#eee; padding:2px 5px; border-radius:4px;">
+                            ${isReady ? 'Ready' : 'Set ' + d.currentSet}
+                        </div>
+                    </div>`;
                 
+                // 移除了原有的 card.style.display = "none" 邏輯，確保 6 個場地皆顯示
+                card.style.display = "flex"; 
+                card.style.opacity = isReady ? "0.7" : "1"; // 準備中的場地略微透明以示區別
                 // 同步場地選擇按鈕顏色
                 const btn = document.getElementById(`court-btn-${id}`);
                 if(btn) {
