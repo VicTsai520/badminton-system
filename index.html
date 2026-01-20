@@ -147,8 +147,7 @@
     <div id="scoring-page" class="page">
         <div id="current-set-label" style="background:var(--accent); padding:5px 15px; border-radius:15px; font-weight:bold; margin-bottom:10px;">第 1 局</div>
         <div class="scoreboard">
-        <div style="display: flex; justify-content: space-between; align-items: center; position: relative;">
-        
+        <div style="display: flex; justify-content: space-between; align-items: center; position: relative; width: 100%;">
             <div style="flex: 1; text-align: center;">
                 <div id="set-won-A" style="font-weight:bold; color:var(--secondary);">Sets: 0</div>
                 <div id="dot-A" class="serving-dot"></div>
@@ -156,7 +155,7 @@
                 <div id="display-nameA" style="font-weight:bold; margin-top:10px; word-break: break-all;">A 隊</div>
             </div>
 
-            <div style="width: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 10;">
+            <div style="width: 80px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 10;">
                 <div style="font-weight: 900; opacity: 0.2; font-size: 1.8rem; letter-spacing: 2px;">VS</div>
                 <div id="deuce-indicator" class="deuce-text">DEUCE</div>
             </div>
@@ -435,7 +434,24 @@
 
     window.clearCourtData = async () => {
         if(confirm("確定清空場地？將重設所有比分與裁判名。")) {
-            await setDoc(doc(db, "games", currentCourt), { nameA: "準備中", nameB: "準備中", scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, currentSet: 1, judgeName: "", targetScore: 21 });
+            const ref = doc(db, "games", currentCourt);
+            const d = (await getDoc(ref)).data();
+            const currentTarget = d.targetScore || 21; // 記住目前的分制
+            
+            await setDoc(ref, { 
+                nameA: "準備中", 
+                nameB: "準備中", 
+                scoreA: 0, 
+                scoreB: 0, 
+                setsA: 0, 
+                setsB: 0, 
+                currentSet: 1, 
+                judgeName: "", 
+                targetScore: currentTarget, // 帶回原本的分制
+                history: [],
+                isWaitingNext: false,
+                server: 'A'
+            });
             showPage('court-selection-page');
         }
     };
