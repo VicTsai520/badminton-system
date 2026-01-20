@@ -290,12 +290,31 @@
         });
         showPage('scoring-page');
     };
-
+    // --- 修改監聽邏輯以加入局點變紅與 Deuce 提醒 (問題3) ---
     function listenToCourt(id) {
         onSnapshot(doc(db, "games", id), (snap) => {
             if (snap.exists() && currentCourt === id) {
                 const d = snap.data();
                 const target = d.targetScore || 21;
+
+                const sA = document.getElementById('score-A');
+                const sB = document.getElementById('score-B');
+                const label = document.getElementById('current-set-label');
+                
+                sA.innerText = d.scoreA;
+                sB.innerText = d.scoreB;
+                // 判斷 Game Point (局點) - 分數變紅
+                const isGamePointA = (d.scoreA >= target - 1 && d.scoreA > d.scoreB);
+                const isGamePointB = (d.scoreB >= target - 1 && d.scoreB > d.scoreA);
+                sA.style.color = isGamePointA ? 'var(--secondary)' : 'var(--text-main)';
+                sB.style.color = isGamePointB ? 'var(--secondary)' : 'var(--text-main)';
+
+                // 判斷 Deuce (平分)
+                const isDeuce = (d.scoreA >= target - 1 && d.scoreA === d.scoreB);
+                label.innerText = isDeuce ? `DEUCE (第 ${d.currentSet} 局)` : `第 ${d.currentSet} 局 (${target}分制)`;
+                label.style.background = isDeuce ? 'var(--secondary)' : 'var(--accent)';
+                label.style.color = isDeuce ? 'white' : 'var(--text-main)';
+                
                 document.getElementById('score-A').innerText = d.scoreA;
                 document.getElementById('score-B').innerText = d.scoreB;
                 document.getElementById('display-nameA').innerText = d.nameA;
@@ -329,6 +348,46 @@
         await updateDoc(ref, { scoreA: nA, scoreB: nB, server: team, isWaitingNext: win, history: h.slice(-10) });
     };
 
+    //重設按鈕
+    window.resetMatch = async () => {
+        if(confirm("確定要重設本局比分嗎？(將清空歷史記錄)")) {
+            const ref = doc(db, "games", currentCourt);
+            const d = (await getDoc(ref)).data();
+            await updateDoc(ref, { 
+                scoreA: 0, 
+                scoreB: 0, 
+                history: [], 
+                isWaitingNext: false,
+                server: 'A' 
+            });
+            alert("已重設比分");
+        }
+    };
+
+    // --- 修改清空場地功能以維持分制  ---
+    window.clearCourtData = async () => {
+        if(confirm("確定清空場地？將重設所有比分與裁判名。")) {
+            const ref = doc(db, "games", currentCourt);
+            const d = (await getDoc(ref)).data();
+            const currentTarget = d.targetScore || 21; // 記住目前的分制
+            
+            await setDoc(ref, { 
+                nameA: "準備中", 
+                nameB: "準備中", 
+                scoreA: 0, 
+                scoreB: 0, 
+                setsA: 0, 
+                setsB: 0, 
+                currentSet: 1, 
+                judgeName: "", 
+                targetScore: currentTarget, // 帶回原本的分制
+                history: [],
+                isWaitingNext: false,
+                server: 'A'
+            });
+            showPage('court-selection-page');
+        }
+    };
     window.confirmNextSet = async () => {
         const ref = doc(db, "games", currentCourt);
         const d = (await getDoc(ref)).data();
