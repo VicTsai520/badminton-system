@@ -8,22 +8,30 @@
     <style>
         :root { --bg-color: #f0f7f4; --primary: #4ecdc4; --secondary: #ff6b6b; --accent: #ffe66d; --text-main: #2f3e46; --card-bg: #ffffff; }
         body { font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; overflow-x: hidden; }
+        
         .page { display: none; min-height: 100vh; padding: 20px; box-sizing: border-box; flex-direction: column; align-items: center; }
         .active-page { display: flex; }
+
         .btn { padding: 15px 25px; border-radius: 50px; border: none; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: inline-block; text-decoration: none; }
         .btn:active { transform: scale(0.92) !important; }
+
         .btn-primary { background-color: var(--primary); color: white; }
         .btn-outline { background: white; border: 2px solid var(--primary); color: var(--primary); }
         .btn-secondary { background-color: var(--secondary); color: white; }
+
         .court-btn { padding: 30px; border-radius: 20px; border: 2px solid #eee; background: white; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; }
+        .court-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-5px); }
+
         .admin-entry { margin-top: auto; padding-bottom: 40px; text-align: center; cursor: pointer; color: #222; }
-        .back-fab { position: fixed; right: 20px; bottom: 20px; width: 55px; height: 55px; background: var(--secondary); color: white; border-radius: 50%; display: none; justify-content: center; align-items: center; z-index: 90; border: none; }
+        .back-fab { position: fixed; right: 20px; bottom: 20px; width: 55px; height: 55px; background: var(--secondary); color: white; border-radius: 50%; display: none; justify-content: center; align-items: center; z-index: 90; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        
         .scoreboard { width: 100%; max-width: 500px; background: white; border-radius: 25px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-        .score-num { font-size: 5rem; font-weight: 900; margin: 0; cursor: pointer; user-select: none; }
+        .score-num { font-size: 5rem; font-weight: 900; margin: 0; cursor: pointer; user-select: none; transition: color 0.2s; }
         .serving-dot { width: 12px; height: 12px; background: var(--secondary); border-radius: 50%; margin: 5px auto; visibility: hidden; }
         .serving-active { visibility: visible; }
         .deuce-alert { color: var(--secondary); font-weight: 900; font-size: 2.2rem; animation: pulse 1s infinite; display: none; margin-top: 5px; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); display: none; justify-content: center; align-items: center; z-index: 100; color: white; text-align: center; }
         .admin-box { background: white; width: 100%; max-width: 450px; padding: 20px; border-radius: 20px; margin-top: 15px; border: 2px solid #ddd; box-sizing: border-box; }
         input, select, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; font-size: 1rem; margin-top: 5px; }
@@ -194,22 +202,21 @@
                 const d = snap.data();
                 const target = d.targetScore || 21;
                 const sA = d.scoreA, sB = d.scoreB;
+                const scoreEl = document.getElementById(`hub-score-${id}`);
                 
                 document.getElementById(`hub-names-${id}`).innerText = `${d.nameA} vs ${d.nameB}`;
                 document.getElementById(`hub-set-${id}`).innerText = `Set ${d.currentSet}`;
-                
-                const scoreEl = document.getElementById(`hub-score-${id}`);
                 scoreEl.innerText = `${sA} : ${sB}`;
 
                 // 大廳顏色邏輯：領先且達到局點才變紅
-                const isGamePointHub = (sA >= target - 1 || sB >= target - 1) && (sA !== sB);
-                scoreEl.style.color = isGamePointHub ? "var(--secondary)" : "var(--primary)";
+                const isSomeoneLeadingAtGP = (sA >= target - 1 || sB >= target - 1) && (sA !== sB);
+                scoreEl.style.color = isSomeoneLeadingAtGP ? "var(--secondary)" : "var(--primary)";
                 document.getElementById(`hub-court-${id}`).style.borderColor = (sA > 0 || sB > 0) ? "var(--primary)" : "#ddd";
             }
         });
     });
 
-    // --- 核心更新 UI (計分頁面) ---
+    // --- 計分頁面 UI 更新 ---
     function updateUI(data) {
         const sA = data.scoreA, sB = data.scoreB, target = data.targetScore || 21;
         const elA = document.getElementById('score-A');
@@ -218,7 +225,7 @@
         elA.innerText = sA;
         elB.innerText = sB;
 
-        // 領先且達到局點才紅，平分(Deuce)變回黑色
+        // 絕對領先判斷：只有我是最高分，且達到局點門檻才變紅
         const isGamePointA = (sA >= target - 1) && (sA > sB);
         const isGamePointB = (sB >= target - 1) && (sB > sA);
 
@@ -234,14 +241,17 @@
         document.getElementById('scoring-judge-name').innerText = data.judgeName || "-";
         document.getElementById('dot-A').className = data.server === 'A' ? 'serving-dot serving-active' : 'serving-dot';
         document.getElementById('dot-B').className = data.server === 'B' ? 'serving-dot serving-active' : 'serving-dot';
+        
+        // DEUCE 提醒 (平手且大於門檻)
         document.getElementById('status-note').style.display = (sA >= target-1 && sB >= target-1 && sA === sB) ? 'block' : 'none';
     }
 
-    // --- 其他功能 ---
+    // --- 其他功能函數 ---
     window.showPage = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
         document.getElementById(id).classList.add('active-page');
         document.getElementById('global-back-btn').style.display = (id === 'home-page') ? 'none' : 'flex';
+        window.scrollTo(0, 0);
     };
     window.smartBack = () => showPage('home-page');
     window.verifyStaff = () => { if(document.getElementById('staff-pass').value==='1234') showPage('staff-select-page'); else alert('密碼錯誤'); };
@@ -261,10 +271,7 @@
         alert(`場地 ${id} 已變更為 ${target} 分制`);
     };
     window.publishNotice = async () => {
-        await setDoc(doc(db, "config", "announcement"), { 
-            content: document.getElementById('admin-announcement').value, 
-            imgUrl: document.getElementById('admin-img-url').value 
-        });
+        await setDoc(doc(db, "config", "announcement"), { content: document.getElementById('admin-announcement').value, imgUrl: document.getElementById('admin-img-url').value });
         alert("公告已更新");
     };
     window.updateLogo = async () => {
