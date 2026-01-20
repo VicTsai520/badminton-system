@@ -230,11 +230,11 @@
             if (snap.exists()) {
                 const d = snap.data();
                 const target = d.targetScore || 21;
-                const card = document.getElementById(`hub-court-${id}`);
-                const namesEl = document.getElementById(`hub-names-${id}`);
                 const scoreEl = document.getElementById(`hub-score-${id}`);
-                const setEl = document.getElementById(`hub-set-${id}`);
-
+                const sA = d.scoreA, sB = d.scoreB;
+                
+                scoreEl.innerText = `${sA} : ${sB}`;
+                
                 // 更新名字與比分
                 namesEl.innerText = `${d.nameA} vs ${d.nameB}`;
                 scoreEl.innerText = `${d.scoreA} : ${d.scoreB}`;
@@ -243,12 +243,15 @@
                 // 如果正在比賽中，卡片邊框變色
                 // --- 大廳局點變色邏輯 ---
                 // 如果任一隊達到局點，整個比分文字變紅並加粗
-                if (d.scoreA >= target - 1 || d.scoreB >= target - 1) {
-                    scoreEl.style.color = "var(--secondary)";
-                    scoreEl.style.fontWeight = "900";
+                // 判斷是否有人處於局點領先
+                const someoneHasGamePoint = (sA >= target - 1 || sB >= target - 1) && (sA !== sB);
+
+                if (someoneHasGamePoint) {
+                    scoreEl.style.color = "var(--secondary)"; // 變紅
+                    scoreEl.style.transform = "scale(1.1)"; // 稍微放大增加緊張感
                 } else {
-                    scoreEl.style.color = "var(--primary)";
-                    scoreEl.style.fontWeight = "900";
+                    scoreEl.style.color = "var(--primary)"; // 恢復主色(青綠)
+                    scoreEl.style.transform = "scale(1)";
                 }
             }
         });
@@ -358,10 +361,14 @@
         scoreA_el.innerText = sA;
         scoreB_el.innerText = sB;
 
-        // --- 局點 (Game Point) 變色邏輯 ---
-        // 當分數達到 target-1 時變紅，否則恢復主色
-        scoreA_el.style.color = (sA >= target - 1) ? "var(--secondary)" : "var(--text-main)";
-        scoreB_el.style.color = (sB >= target - 1) ? "var(--secondary)" : "var(--text-main)";
+        // --- 專業局點判斷邏輯 ---
+        // 1. A隊領先且達到(或超過)目標分數-1
+        // 2. 且 A隊必須領先 B隊 (Deuce 時不亮紅燈)
+        const isGamePointA = (sA >= target - 1) && (sA > sB);
+        const isGamePointB = (sB >= target - 1) && (sB > sA);
+
+        scoreA_el.style.color = isGamePointA ? "var(--secondary)" : "var(--text-main)";
+        scoreB_el.style.color = isGamePointB ? "var(--secondary)" : "var(--text-main)";
         
         document.getElementById('current-rule-display').innerText = `${target}分制`;
         document.getElementById('score-A').innerText = sA;
@@ -456,5 +463,6 @@
 </script>
 </body>
 </html>
+
 
 
