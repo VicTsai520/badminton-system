@@ -54,7 +54,23 @@
             0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 15px var(--secondary); }
             50% { opacity: 0.3; transform: scale(1.3); box-shadow: 0 0 5px var(--secondary); }
         }
-        
+        .deuce-text {
+            color: #ff6b6b;
+            font-weight: 900;
+            font-size: 1.1rem;
+            display: none; /* 預設隱藏 */
+            position: absolute;
+            transform: translateY(25px); /* 讓它顯示在 VS 下方一點 */
+            /*top: 25px; /* 改用 top 定位更準確 */
+            /*white-space: nowrap; /* 確保文字不換行 */
+            animation: deuceBreathe 1s infinite ease-in-out;
+        }
+
+        @keyframes deuceBreathe {
+            0%, 100% { transform: translateY(25px) scale(1); opacity: 1; }
+            50% { transform: translateY(25px) scale(1.3); opacity: 0.7; }
+        }
+
         /* 彈窗 */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); display: none; justify-content: center; align-items: center; z-index: 1000; color: white; text-align: center; backdrop-filter: blur(5px); }
         .admin-box { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 25px; margin-top: 15px; box-sizing: border-box; color: var(--text-main); text-align: left; }
@@ -137,7 +153,9 @@
                     <div id="score-A" class="score-num" onclick="addScore('A')">0</div>
                     <div id="display-nameA" style="font-weight:bold; margin-top:10px;">A 隊</div>
                 </div>
-                <div style="width: 40px; font-weight:bold; opacity:0.3;">VS</div>
+                <div style="width: 40px; font-weight:bold; opacity:0.3; position: relative; display: flex; justify-content: center;">
+                    VS
+                    <div id="deuce-indicator" class="deuce-text">DEUCE</div>
                 <div style="flex: 1;">
                     <div id="set-won-B" style="font-weight:bold; color:var(--secondary);">Sets: 0</div>
                     <div id="dot-B" class="serving-dot"></div>
@@ -300,10 +318,18 @@
                 const sA = document.getElementById('score-A');
                 const sB = document.getElementById('score-B');
                 const label = document.getElementById('current-set-label');
+                //定義一次DEUCE
+                const deuceEl = document.getElementById('deuce-indicator'); // 取得 DEUCE 元素
                 
+                // 更新分數與隊伍名稱與已勝局數 (補回這幾行)
                 sA.innerText = d.scoreA;
                 sB.innerText = d.scoreB;
 
+                document.getElementById('display-nameA').innerText = d.nameA;
+                document.getElementById('display-nameB').innerText = d.nameB;
+                document.getElementById('set-won-A').innerText = `Sets: ${d.setsA || 0}`;
+                document.getElementById('set-won-B').innerText = `Sets: ${d.setsB || 0}`;
+                
                 // 判斷 Game Point (局點) - 分數變紅
                 const isGamePointA = (d.scoreA >= target - 1 && d.scoreA > d.scoreB);
                 const isGamePointB = (d.scoreB >= target - 1 && d.scoreB > d.scoreA);
@@ -312,14 +338,21 @@
 
                 // 判斷 Deuce (平分)
                 const isDeuce = (d.scoreA >= target - 1 && d.scoreA === d.scoreB);
-                label.innerText = isDeuce ? `DEUCE (第 ${d.currentSet} 局)` : `第 ${d.currentSet} 局 (${target}分制)`;
-                label.style.background = isDeuce ? 'var(--secondary)' : 'var(--accent)';
-                label.style.color = isDeuce ? 'white' : 'var(--text-main)';
                 
+                // 更新標題（維持原樣，不隨 Deuce 變動）
+                label.innerText = `第 ${d.currentSet} 局 (${target}分制)`;
+                label.style.background = 'var(--accent)';
+                label.style.color = 'var(--text-main)';
+
+                // 控制 DEUCE 紅色呼吸燈顯示
+                if (deuceEl) {
+                    deuceEl.style.display = isDeuce ? 'block' : 'none';
+                }
+
                 // 呼吸燈與發球權
                 document.getElementById('dot-A').className = d.server === 'A' ? 'serving-dot serving-active' : 'serving-dot';
                 document.getElementById('dot-B').className = d.server === 'B' ? 'serving-dot serving-active' : 'serving-dot';
-
+                // 獲勝彈窗
                 if(d.isWaitingNext) {
                     document.getElementById('winner-text').innerText = `${d.scoreA > d.scoreB ? d.nameA : d.nameB} 獲勝！`;
                     document.getElementById('final-score-display').innerText = `${d.scoreA} : ${d.scoreB}`;
