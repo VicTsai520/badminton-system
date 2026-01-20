@@ -479,6 +479,14 @@
             if(snap.exists()){
                 const d = snap.data();
                 const isReady = (d.nameA === "準備中");
+                const target = d.targetScore || 21;
+                
+                // 1. 判斷是否接近結束 (局點時變紅)
+                const isClosingIn = (d.scoreA >= target - 1 || d.scoreB >= target - 1);
+                const scoreColor = isClosingIn ? 'var(--secondary)' : 'var(--primary)';
+
+                // 2. 取得大局數比分 (例如 1:0)
+                const setsDisplay = `${d.setsA || 0} : ${d.setsB || 0}`;
 
                 // 修改後的顯示邏輯：即使是準備中也顯示，並調整樣式區分
                 card.innerHTML = `
