@@ -34,12 +34,27 @@
         }
         .court-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
 
+        /* 右下角圓形返回按鈕 - 改為文字樣式 */
         .back-fab { 
-            position: fixed; right: 20px; bottom: 20px; width: 55px; height: 55px; 
-            background: var(--secondary); color: white; border-radius: 50%; 
-            display: none; justify-content: center; align-items: center; 
-            z-index: 90; border: none; box-shadow: 0 4px 15px rgba(255,107,107,0.4); 
-            font-size: 1.2rem; cursor: pointer; transition: 0.3s;
+            position: fixed; 
+            right: 20px; 
+            bottom: 20px; 
+            width: 65px; 
+            height: 65px;  
+            background: var(--secondary); 
+            color: white; 
+            border-radius: 50%; 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 90; 
+            border: none; 
+            box-shadow: 0 4px 15px rgba(255,107,107,0.4); 
+            font-size: 0.95rem; 
+            font-weight: bold;
+            cursor: pointer; 
+            transition: 0.3s;
+            line-height: 1;
         }
         
         .scoreboard { width: 100%; max-width: 500px; background: white; border-radius: 25px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
@@ -181,7 +196,7 @@
         <button class="btn btn-outline" onclick="showPage('home-page')">退出後台</button>
     </div>
 
-    <button id="global-back-btn" class="back-fab" onclick="smartBack()">🔙</button>
+    <button id="global-back-btn" class="back-fab" onclick="smartBack()">返回</button>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -202,7 +217,7 @@
     let loggedJudge = "";
     const courts = ['1', '2', '3', '4', '5', '6'];
 
-    // --- 核心更新 UI (包含紅色 Game Point 亮起邏輯) ---
+    // --- 核心更新 UI ---
     function updateUI(data) {
         if (!data) return;
         const sA = data.scoreA || 0, sB = data.scoreB || 0, target = data.targetScore || 21;
@@ -212,7 +227,6 @@
         elA.innerText = sA;
         elB.innerText = sB;
 
-        // 亮紅色邏輯：如果該隊領先且再拿一分就結束（或是 Deuce 狀態）
         const isGamePointA = (sA >= target - 1 && sA > sB);
         const isGamePointB = (sB >= target - 1 && sB > sA);
         
@@ -232,7 +246,7 @@
         document.getElementById('status-note').style.display = (sA >= target-1 && sB >= target-1 && sA === sB) ? 'block' : 'none';
     }
 
-    // --- 大廳初始化與監聽 (大廳也要同步亮紅) ---
+    // --- 大廳初始化與監聽 ---
     const gridEl = document.getElementById('live-scoreboard-grid');
     gridEl.innerHTML = courts.map(id => `
         <div id="hub-court-${id}" style="background: white; border-radius: 15px; padding: 15px; display: flex; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #ddd; transition: all 0.3s;">
@@ -269,7 +283,6 @@
                 }
                 document.getElementById(`hub-set-${id}`).innerText = `Set ${d.currentSet || 1}`;
                 
-                // 大廳亮紅邏輯
                 const isGP = (sA >= target - 1 || sB >= target - 1) && (sA !== sB);
                 scoreEl.style.color = isGP ? "var(--secondary)" : "var(--primary)";
                 document.getElementById(`hub-court-${id}`).style.borderColor = (d.nameA === "準備中") ? "#ddd" : "var(--primary)";
@@ -289,7 +302,12 @@
         });
     });
 
-    // --- 以下為原有邏輯 (確保斷線重連與換邊功能) ---
+    // --- 裁判登入與手動輸入框監聽邏輯 ---
+    // 監聽下拉選單，若選「其他」則顯示輸入框
+    document.getElementById('staff-name-list').addEventListener('change', function() {
+        document.getElementById('manual-name-group').style.display = (this.value === '其他') ? 'block' : 'none';
+    });
+
     window.confirmStaff = () => {
         const selectBox = document.getElementById('staff-name-list');
         const manualInput = document.getElementById('staff-name-manual');
