@@ -60,9 +60,10 @@
             font-size: 1.1rem;
             display: none; /* 預設隱藏 */
             position: absolute;
-            transform: translateY(25px); /* 讓它顯示在 VS 下方一點 */
-            /*top: 25px; /* 改用 top 定位更準確 */
-            /*white-space: nowrap; /* 確保文字不換行 */
+            /*transform: translateY(25px); /* 讓它顯示在 VS 下方一點 */
+            top: 35px; /* 改用 top 定位更準確 */
+            white-space: nowrap; /* 確保文字不換行 */
+            text-shadow: 0 0 5px rgba(255,107,107,0.3);
             animation: deuceBreathe 1s infinite ease-in-out;
         }
 
@@ -146,24 +147,29 @@
     <div id="scoring-page" class="page">
         <div id="current-set-label" style="background:var(--accent); padding:5px 15px; border-radius:15px; font-weight:bold; margin-bottom:10px;">第 1 局</div>
         <div class="scoreboard">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="flex: 1;">
-                    <div id="set-won-A" style="font-weight:bold; color:var(--secondary);">Sets: 0</div>
-                    <div id="dot-A" class="serving-dot"></div>
-                    <div id="score-A" class="score-num" onclick="addScore('A')">0</div>
-                    <div id="display-nameA" style="font-weight:bold; margin-top:10px;">A 隊</div>
-                </div>
-                <div style="width: 40px; font-weight:bold; opacity:0.3; position: relative; display: flex; justify-content: center;">
-                    VS
-                    <div id="deuce-indicator" class="deuce-text">DEUCE</div>
-                <div style="flex: 1;">
-                    <div id="set-won-B" style="font-weight:bold; color:var(--secondary);">Sets: 0</div>
-                    <div id="dot-B" class="serving-dot"></div>
-                    <div id="score-B" class="score-num" onclick="addScore('B')">0</div>
-                    <div id="display-nameB" style="font-weight:bold; margin-top:10px;">B 隊</div>
-                </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; position: relative;">
+            
+            <div style="flex: 1; text-align: center;">
+                <div id="set-won-A" style="font-weight:bold; color:var(--secondary);">Sets: 0</div>
+                <div id="dot-A" class="serving-dot"></div>
+                <div id="score-A" class="score-num" onclick="addScore('A')">0</div>
+                <div id="display-nameA" style="font-weight:bold; margin-top:10px;">A 隊</div>
             </div>
+
+            <div style="width: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                <div style="font-weight:bold; opacity:0.3; font-size: 0.9rem;">VS</div>
+                <div id="deuce-indicator" class="deuce-text">DEUCE</div>
+            </div>
+
+            <div style="flex: 1; text-align: center;">
+                <div id="set-won-B" style="font-weight:bold; color:var(--secondary);">Sets: 0</div>
+                <div id="dot-B" class="serving-dot"></div>
+                <div id="score-B" class="score-num" onclick="addScore('B')">0</div>
+                <div id="display-nameB" style="font-weight:bold; margin-top:10px;">B 隊</div>
+            </div>
+            
         </div>
+    </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 500px; margin-top: 20px;">
             <button class="btn btn-outline" onclick="undo()">↩️ 恢復</button>
             <button class="btn btn-outline" onclick="switchSide()">🔄 換邊</button>
