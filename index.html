@@ -93,7 +93,7 @@
     </div>
 
     <div id="pre-game-page" class="page">
-        <h2 id="setup-title">場地設定 <span id="current-rule-display" style="font-size: 0.8rem; color: var(--secondary);">載入中...</span></h2>
+        <h2 id="setup-title">場地設定 <span id="current-rule-display" style="font-size: 1.2rem; color: var(--secondary); font-weight: 900;">...</span></h2>
         <div class="input-group" style="max-width:300px;">
             <label>隊伍 A</label><input type="text" id="teamA-names" placeholder="名稱">
             <br><br>
@@ -130,7 +130,7 @@
             <button class="btn btn-outline" onclick="manualServe()">🏸 發球</button>
             <button class="btn btn-secondary" onclick="resetMatch()">⚠️ 重設</button>
         </div>
-        <button class="btn btn-gray" style="width: 100%; max-width: 500px; margin-top: 5px;" onclick="clearCourtData()">🔚 結束並清空場地 (大廳顯示準備中)</button>
+        <button class="btn btn-gray" style="width: 100%; max-width: 500px; margin-top: 5px;" onclick="clearCourtData()">🔚 結束並清空場地</button>
         <div style="font-size: 0.8rem; color:#888; margin-top:10px;">執法裁判：<span id="scoring-judge-name">-</span></div>
     </div>
 
@@ -150,17 +150,17 @@
     <div id="admin-master-page" class="page">
         <h1 style="color: var(--secondary);">🛠️ 管理後台</h1>
         <div class="admin-box">
-            <h4>1. 分制與公告</h4>
-            <select id="admin-court-select"><option value="1">場地 1</option><option value="2">場地 2</option><option value="3">場地 3</option><option value="4">場地 4</option><option value="5">場地 5</option><option value="6">場地 6</option></select>
+            <h4>1. 全場地統一賽制</h4>
             <select id="rule-score-target" style="margin-top:10px;"><option value="11">11 分制</option><option value="15">15 分制</option><option value="21">21 分制</option></select>
-            <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="updateCourtRule()">套用分制</button>
+            <button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="updateAllCourtsRule()">套用至所有場地 (1-6)</button>
             <hr>
+            <h4>2. 公告與賽程圖</h4>
             <textarea id="admin-announcement" placeholder="公告內容..."></textarea>
             <input type="text" id="admin-img-url" placeholder="賽程圖網址..." style="margin-top:10px;">
             <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="publishNotice()">發布公告</button>
         </div>
         <div class="admin-box">
-            <h4>2. 系統封面 Logo</h4>
+            <h4>3. 系統封面 Logo</h4>
             <input type="text" id="admin-logo-url" placeholder="貼上 Logo 圖片網址...">
             <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="updateLogo()">更新封面照片</button>
         </div>
@@ -171,7 +171,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAbj5MjkqNMCUwIM5b2Mbyw1OeJ55uZvMw",
@@ -186,9 +186,9 @@
     const db = getFirestore(app);
     let currentCourt = null;
     let loggedJudge = "";
+    const courts = ['1', '2', '3', '4', '5', '6'];
 
     // --- 大廳初始化 ---
-    const courts = ['1', '2', '3', '4', '5', '6'];
     const gridEl = document.getElementById('live-scoreboard-grid');
     gridEl.innerHTML = courts.map(id => `
         <div id="hub-court-${id}" style="background: white; border-radius: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #ddd;">
@@ -204,46 +204,34 @@
         </div>
     `).join('');
 
-    // --- 監聽大廳數據 ---
+    // --- 監聽大廳 ---
     courts.forEach(id => {
         onSnapshot(doc(db, "games", id), (snap) => {
             if (snap.exists()) {
                 const d = snap.data();
                 const target = d.targetScore || 21;
                 const sA = d.scoreA || 0, sB = d.scoreB || 0;
-                const scoreEl = document.getElementById(`hub-score-${id}`);
-                
                 document.getElementById(`hub-names-${id}`).innerText = `${d.nameA} vs ${d.nameB}`;
                 document.getElementById(`hub-set-${id}`).innerText = `Set ${d.currentSet || 1}`;
                 document.getElementById(`hub-sets-score-${id}`).innerText = `Sets: ${d.setsA || 0} : ${d.setsB || 0}`;
+                const scoreEl = document.getElementById(`hub-score-${id}`);
                 scoreEl.innerText = `${sA} : ${sB}`;
-
-                const isSomeoneLeadingAtGP = (sA >= target - 1 || sB >= target - 1) && (sA !== sB);
-                scoreEl.style.color = isSomeoneLeadingAtGP ? "var(--secondary)" : "var(--primary)";
-                
-                // 判斷是否為「準備中」狀態 (名稱為準備中且分數0:0)
-                const isReady = (d.nameA === "準備中" && sA === 0 && sB === 0);
-                document.getElementById(`hub-court-${id}`).style.borderColor = isReady ? "#ddd" : "var(--primary)";
+                const isGP = (sA >= target - 1 || sB >= target - 1) && (sA !== sB);
+                scoreEl.style.color = isGP ? "var(--secondary)" : "var(--primary)";
+                document.getElementById(`hub-court-${id}`).style.borderColor = (d.nameA === "準備中") ? "#ddd" : "var(--primary)";
             }
         });
     });
 
-    // --- 計分頁面 UI 更新 ---
+    // --- 裁判計分邏輯 ---
     function updateUI(data) {
         if (!data) return;
         const sA = data.scoreA || 0, sB = data.scoreB || 0, target = data.targetScore || 21;
         const elA = document.getElementById('score-A');
         const elB = document.getElementById('score-B');
-        
-        elA.innerText = sA;
-        elB.innerText = sB;
-
-        const isGamePointA = (sA >= target - 1) && (sA > sB);
-        const isGamePointB = (sB >= target - 1) && (sB > sA);
-
-        elA.style.color = isGamePointA ? "var(--secondary)" : "var(--text-main)";
-        elB.style.color = isGamePointB ? "var(--secondary)" : "var(--text-main)";
-
+        elA.innerText = sA; elB.innerText = sB;
+        elA.style.color = (sA >= target - 1 && sA > sB) ? "var(--secondary)" : "var(--text-main)";
+        elB.style.color = (sB >= target - 1 && sB > sA) ? "var(--secondary)" : "var(--text-main)";
         document.getElementById('display-nameA').innerText = data.nameA || "A 隊";
         document.getElementById('display-nameB').innerText = data.nameB || "B 隊";
         document.getElementById('set-won-A').innerText = `Sets: ${data.setsA || 0}`;
@@ -253,9 +241,89 @@
         document.getElementById('dot-A').className = data.server === 'A' ? 'serving-dot serving-active' : 'serving-dot';
         document.getElementById('dot-B').className = data.server === 'B' ? 'serving-dot serving-active' : 'serving-dot';
         document.getElementById('status-note').style.display = (sA >= target-1 && sB >= target-1 && sA === sB) ? 'block' : 'none';
+        // 同步 Pre-game 頁面的顯示，防止載入中
+        document.getElementById('current-rule-display').innerText = `${target} 分制`;
     }
 
-    // --- 核心與管理邏輯 ---
+    window.selectCourt = async (id) => { 
+        currentCourt = id; 
+        document.getElementById('current-rule-display').innerText = "...";
+        showPage('pre-game-page'); 
+        const snap = await getDoc(doc(db, "games", id));
+        if(snap.exists()) {
+            document.getElementById('current-rule-display').innerText = `${snap.data().targetScore || 21} 分制`;
+        }
+        listenToCourt(id); 
+    };
+
+    function listenToCourt(id) {
+        onSnapshot(doc(db, "games", id), (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                updateUI(data);
+                if (data.isWaitingNext && document.getElementById('game-over-overlay').style.display !== 'flex') {
+                    showWinnerOverlay(data.scoreA > data.scoreB ? data.nameA : data.nameB, data.scoreA, data.scoreB);
+                }
+            }
+        });
+    }
+
+    // --- 管理員：一次修改全場地 ---
+    window.updateAllCourtsRule = async () => {
+        const target = parseInt(document.getElementById('rule-score-target').value);
+        if(confirm(`確定要將所有場地 (1-6) 統一更改為 ${target} 分制嗎？`)) {
+            const batch = writeBatch(db);
+            courts.forEach(id => {
+                const ref = doc(db, "games", id);
+                batch.update(ref, { targetScore: target });
+            });
+            await batch.commit();
+            alert("全場地賽制已同步更新！");
+        }
+    };
+
+    // --- 其餘功能與清空 ---
+    window.clearCourtData = async () => {
+        if(confirm("結束這場比賽？資料將清空並顯示準備中。")){
+            const snap = await getDoc(doc(db, "games", currentCourt));
+            const t = snap.exists() ? (snap.data().targetScore || 21) : 21;
+            await setDoc(doc(db, "games", currentCourt), { scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, nameA: "準備中", nameB: "準備中", currentSet: 1, server: 'A', history: [], isWaitingNext: false, targetScore: t, judgeName: "" });
+            showPage('court-selection-page');
+        }
+    };
+    window.startMatch = async () => {
+        const snap = await getDoc(doc(db, "games", currentCourt));
+        const t = snap.exists() ? (snap.data().targetScore || 21) : 21;
+        await setDoc(doc(db, "games", currentCourt), { scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, nameA: document.getElementById('teamA-names').value || "A 隊", nameB: document.getElementById('teamB-names').value || "B 隊", currentSet: 1, server: 'A', history: [], isWaitingNext: false, targetScore: t, judgeName: loggedJudge });
+        showPage('scoring-page');
+    };
+    window.addScore = async (team) => {
+        const docRef = doc(db, "games", currentCourt);
+        const d = (await getDoc(docRef)).data();
+        if(d.nameA === "準備中") return;
+        const target = d.targetScore || 21;
+        let nA = team === 'A' ? d.scoreA + 1 : d.scoreA;
+        let nB = team === 'B' ? d.scoreB + 1 : d.scoreB;
+        const win = (nA >= target && nA-nB >= 2) || (nB >= target && nB-nA >= 2) || nA === target+9 || nB === target+9;
+        const hist = d.history || []; hist.push({scoreA: d.scoreA, scoreB: d.scoreB, server: d.server});
+        await updateDoc(docRef, { scoreA: nA, scoreB: nB, server: team, history: hist.slice(-10), isWaitingNext: win });
+    };
+    window.confirmNextSet = async () => {
+        const docRef = doc(db, "games", currentCourt);
+        const d = (await getDoc(docRef)).data();
+        const winner = d.scoreA > d.scoreB ? 'A' : 'B';
+        await updateDoc(docRef, { setsA: winner==='A'?d.setsA+1:d.setsA, setsB: winner==='B'?d.setsB+1:d.setsB, scoreA: 0, scoreB: 0, currentSet: d.currentSet+1, server: winner, isWaitingNext: false, history: [] });
+        document.getElementById('game-over-overlay').style.display = 'none';
+    };
+    window.undo = async () => {
+        const docRef = doc(db, "games", currentCourt);
+        const d = (await getDoc(docRef)).data();
+        if (d.history && d.history.length > 0) { 
+            const last = d.history.pop(); 
+            await updateDoc(docRef, { ...last, history: d.history, isWaitingNext: false }); 
+        }
+        document.getElementById('game-over-overlay').style.display = 'none';
+    };
     window.showPage = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
         document.getElementById(id).classList.add('active-page');
@@ -263,7 +331,6 @@
     };
     window.smartBack = () => showPage('home-page');
     window.verifyStaff = () => { if(document.getElementById('staff-pass').value==='1234') showPage('staff-select-page'); else alert('密碼錯誤'); };
-    document.getElementById('staff-name-list').addEventListener('change', (e) => { document.getElementById('manual-name-group').style.display = (e.target.value==='其他') ? 'block' : 'none'; });
     window.confirmStaff = () => {
         const val = document.getElementById('staff-name-list').value;
         loggedJudge = (val === '其他') ? document.getElementById('staff-name-manual').value : val;
@@ -272,12 +339,6 @@
         showPage('court-selection-page');
     };
     window.adminLogin = () => { if(prompt("管理員密碼")==='9999') showPage('admin-master-page'); };
-    window.updateCourtRule = async () => {
-        const id = document.getElementById('admin-court-select').value;
-        const target = parseInt(document.getElementById('rule-score-target').value);
-        await updateDoc(doc(db, "games", id), { targetScore: target });
-        alert(`場地 ${id} 已變更為 ${target} 分制`);
-    };
     window.publishNotice = async () => {
         await setDoc(doc(db, "config", "announcement"), { content: document.getElementById('admin-announcement').value, imgUrl: document.getElementById('admin-img-url').value });
         alert("公告已更新");
@@ -286,8 +347,6 @@
         await setDoc(doc(db, "config", "appearance"), { logoUrl: document.getElementById('admin-logo-url').value });
         alert("Logo 已更新");
     };
-
-    // --- 監聽系統配置 ---
     onSnapshot(doc(db, "config", "announcement"), (snap) => {
         if(snap.exists()){
             const d = snap.data();
@@ -304,96 +363,14 @@
             div.style.fontSize = d.logoUrl ? "0px" : "60px";
         }
     });
-
-    // --- 計分功能 ---
-    window.selectCourt = (id) => { currentCourt = id; showPage('pre-game-page'); listenToCourt(id); };
-    function listenToCourt(id) {
-        onSnapshot(doc(db, "games", id), (snap) => {
-            if (snap.exists()) {
-                const data = snap.data();
-                updateUI(data);
-                if (data.isWaitingNext && document.getElementById('game-over-overlay').style.display !== 'flex') {
-                    showWinnerOverlay(data.scoreA > data.scoreB ? data.nameA : data.nameB, data.scoreA, data.scoreB);
-                }
-            }
-        });
-    }
-
-    // 清空場地資料 (大廳顯示準備中)
-    window.clearCourtData = async () => {
-        if(confirm("確定要結束這場比賽並清空資料嗎？大廳將顯示「準備中」。")){
-            const docRef = doc(db, "games", currentCourt);
-            const snap = await getDoc(docRef);
-            const currentTarget = snap.exists() ? (snap.data().targetScore || 21) : 21;
-            await setDoc(docRef, { 
-                scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, 
-                nameA: "準備中", nameB: "準備中", 
-                currentSet: 1, server: 'A', history: [], 
-                isWaitingNext: false, targetScore: currentTarget, judgeName: "" 
-            });
-            showPage('court-selection-page');
-        }
-    };
-
-    window.startMatch = async () => {
-        const docRef = doc(db, "games", currentCourt);
-        const snap = await getDoc(docRef);
-        const target = snap.exists() ? (snap.data().targetScore || 21) : 21;
-        await setDoc(docRef, { 
-            scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, 
-            nameA: document.getElementById('teamA-names').value || "A 隊", 
-            nameB: document.getElementById('teamB-names').value || "B 隊", 
-            currentSet: 1, server: 'A', history: [], 
-            isWaitingNext: false, targetScore: target, judgeName: loggedJudge 
-        });
-        showPage('scoring-page');
-    };
-
-    window.addScore = async (team) => {
-        const docRef = doc(db, "games", currentCourt);
-        const d = (await getDoc(docRef)).data();
-        if(d.nameA === "準備中") return; // 防止空場誤觸
-        const target = d.targetScore || 21;
-        let nA = team === 'A' ? d.scoreA + 1 : d.scoreA;
-        let nB = team === 'B' ? d.scoreB + 1 : d.scoreB;
-        const win = (nA >= target && nA-nB >= 2) || (nB >= target && nB-nA >= 2) || nA === target+9 || nB === target+9;
-        const hist = d.history || []; hist.push({scoreA: d.scoreA, scoreB: d.scoreB, server: d.server});
-        await updateDoc(docRef, { scoreA: nA, scoreB: nB, server: team, history: hist.slice(-10), isWaitingNext: win });
-    };
-
-    window.confirmNextSet = async () => {
-        const docRef = doc(db, "games", currentCourt);
-        const d = (await getDoc(docRef)).data();
-        const winner = d.scoreA > d.scoreB ? 'A' : 'B';
-        await updateDoc(docRef, { 
-            setsA: winner==='A'?d.setsA+1:d.setsA, 
-            setsB: winner==='B'?d.setsB+1:d.setsB, 
-            scoreA: 0, scoreB: 0, 
-            currentSet: d.currentSet+1, server: winner, 
-            isWaitingNext: false, history: [] 
-        });
-        document.getElementById('game-over-overlay').style.display = 'none';
-    };
-
+    window.switchSide = () => { const c = document.getElementById('team-container'); c.style.flexDirection = (c.style.flexDirection==='row-reverse') ? 'row' : 'row-reverse'; };
+    window.manualServe = async () => { const docRef = doc(db, "games", currentCourt); const s = (await getDoc(docRef)).data().server; await updateDoc(docRef, { server: (s==='A'?'B':'A') }); };
+    window.resetMatch = async () => { if (confirm("確定重設本局？")) startMatch(); };
     function showWinnerOverlay(name, sA, sB) { 
         document.getElementById('winner-text').innerText = `${name} 獲勝！`; 
         document.getElementById('final-score-display').innerText = `${sA} : ${sB}`;
         document.getElementById('game-over-overlay').style.display = 'flex'; 
     }
-
-    window.undo = async () => {
-        const docRef = doc(db, "games", currentCourt);
-        const d = (await getDoc(docRef)).data();
-        if (d.history && d.history.length > 0) { 
-            const last = d.history.pop(); 
-            await updateDoc(docRef, { ...last, history: d.history, isWaitingNext: false }); 
-        }
-        document.getElementById('game-over-overlay').style.display = 'none';
-    };
-
-    window.switchSide = () => { const c = document.getElementById('team-container'); c.style.flexDirection = (c.style.flexDirection==='row-reverse') ? 'row' : 'row-reverse'; };
-    window.manualServe = async () => { const docRef = doc(db, "games", currentCourt); const s = (await getDoc(docRef)).data().server; await updateDoc(docRef, { server: (s==='A'?'B':'A') }); };
-    window.resetMatch = async () => { if (confirm("確定要重設目前這局嗎？")) startMatch(); };
 </script>
 </body>
 </html>
