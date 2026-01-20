@@ -492,25 +492,30 @@
                 // 修改後的顯示邏輯：即使是準備中也顯示，並調整樣式區分
                 card.innerHTML = `
                     <div style="flex:1">
-                        <div style="font-size:0.75rem; color:#888; display:flex; justify-content:space-between; align-items:center; padding-right:15px;">
-                            <span>場地 ${id}</span>
-                            <span style="color:var(--secondary); font-weight:bold; background:rgba(255,107,107,0.1); padding:2px 6px; border-radius:4px;">
-                                局數比 ${setsScoreText}
-                            </span>
-                        </div>
-                        <div style="font-weight:bold; font-size:1.1rem; color:${isReady ? '#95a5a6' : 'var(--text-main)'}; margin-top:5px;">
+                        <div style="font-size:0.75rem; color:#888; margin-bottom: 2px;">場地 ${id}</div>
+                        <div style="font-weight:bold; font-size:1.1rem; color:${isReady ? '#95a5a6' : 'var(--text-main)'};">
                             ${d.nameA} ${isReady ? '' : 'vs ' + d.nameB}
                         </div>
-                        <div style="font-size:0.75rem; color:#ff6b6b; margin-top:2px;">
-                            ${isReady ? '等待開賽' : '裁判: ' + (d.judgeName || '無')}
+                        <div style="font-size:0.75rem; color:#666; margin-top:4px;">
+                            ${isReady ? '等待開賽' : '執法裁判: ' + (d.judgeName || '無')}
                         </div>
                     </div>
-                    <div style="text-align:right; min-width:85px;">
-                        <div style="font-size:1.8rem; font-weight:900; color:${isReady ? '#ccc' : scoreColor}; line-height:1;">
+                    <div style="text-align:right; min-width:100px; display: flex; flex-direction: column; justify-content: center; align-items: flex-end;">
+                        <div style="font-size:1.85rem; font-weight: 900; color:${isReady ? '#ccc' : scoreColor}; line-height: 1;">
                             ${d.scoreA} : ${d.scoreB}
                         </div>
-                        <div style="font-size:0.7rem; background:#eee; padding:2px 6px; border-radius:4px; display:inline-block; margin-top:8px; color:#666;">
-                            ${isReady ? 'Ready' : 'Set ' + d.currentSet}
+                        
+                        <div style="font-size:0.7rem; 
+                                    background: #2f3e46; 
+                                    color: white; 
+                                    padding: 3px 8px; 
+                                    border-radius: 6px; 
+                                    display: inline-block; 
+                                    margin-top: 8px; 
+                                    font-weight: bold;
+                                    letter-spacing: 0.5px;
+                                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            ${isReady ? 'READY' : 'SETS ' + setsScoreText}
                         </div>
                     </div>`;
                 
