@@ -230,21 +230,24 @@
             </div>
         </div>
     `).join('');
-
+    
+    // --- 監聽場地選擇按鈕狀態 ---
     courts.forEach(id => {
         onSnapshot(doc(db, "games", id), (snap) => {
-            if (snap.exists()) {
+            const btn = document.querySelector(`button[onclick="selectCourt('${id}')"]`);
+            if (snap.exists() && btn) {
                 const d = snap.data();
-                const target = d.targetScore || 21;
-                const sA = d.scoreA || 0, sB = d.scoreB || 0;
-                document.getElementById(`hub-names-${id}`).innerText = `${d.nameA} vs ${d.nameB}`;
-                document.getElementById(`hub-set-${id}`).innerText = `Set ${d.currentSet || 1}`;
-                document.getElementById(`hub-sets-score-${id}`).innerText = `Sets: ${d.setsA || 0} : ${d.setsB || 0}`;
-                const scoreEl = document.getElementById(`hub-score-${id}`);
-                scoreEl.innerText = `${sA} : ${sB}`;
-                const isGP = (sA >= target - 1 || sB >= target - 1) && (sA !== sB);
-                scoreEl.style.color = isGP ? "var(--secondary)" : "var(--primary)";
-                document.getElementById(`hub-court-${id}`).style.borderColor = (d.nameA === "準備中") ? "#ddd" : "var(--primary)";
+                // 如果有名稱且不是「準備中」，或者是已經有裁判名，就顯示執法中
+                if (d.judgeName && d.judgeName !== "" && d.nameA !== "準備中") {
+                    btn.style.borderColor = "var(--secondary)";
+                    btn.innerHTML = `場地 ${id}<br><span style="font-size:0.7rem; color:var(--secondary);">執法中: ${d.judgeName}</span>`;
+                    btn.dataset.inUse = "true";
+                    btn.dataset.activeJudge = d.judgeName;
+                } else {
+                    btn.style.borderColor = "#eee";
+                    btn.innerHTML = `場地 ${id}`;
+                    btn.dataset.inUse = "false";
+                }
             }
         });
     });
@@ -271,6 +274,13 @@
     }
 
     window.selectCourt = async (id) => { 
+        const btn = document.querySelector(`button[onclick="selectCourt('${id}')"]`);
+        if (btn && btn.dataset.inUse === "true") {
+            if (!confirm(`警告：該場地目前正由 ${btn.dataset.activeJudge} 執法中！\n進入後可能會干擾對方的計分。確定要進入嗎？`)) {
+                return;
+            }
+        }
+        
         currentCourt = id; 
         document.getElementById('current-rule-display').innerText = "...";
         showPage('pre-game-page'); 
@@ -278,7 +288,7 @@
         if(snap.exists()) {
             document.getElementById('current-rule-display').innerText = `${snap.data().targetScore || 21} 分制`;
         }
-        listenToCourt(id); 
+        listenToCourt(id);
     };
 
     function listenToCourt(id) {
@@ -404,3 +414,4 @@
 </script>
 </body>
 </html>
+
