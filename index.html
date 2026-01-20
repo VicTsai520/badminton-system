@@ -12,7 +12,6 @@
         .page { display: none; min-height: 100vh; padding: 20px; box-sizing: border-box; flex-direction: column; align-items: center; }
         .active-page { display: flex; }
 
-        /* 生動的按鈕效果 */
         .btn { 
             padding: 15px 25px; border-radius: 50px; border: none; font-size: 1rem; font-weight: bold; 
             cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
@@ -57,7 +56,7 @@
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); display: none; justify-content: center; align-items: center; z-index: 100; color: white; text-align: center; backdrop-filter: blur(5px); }
         .admin-box { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 25px; margin-top: 15px; border: 1px solid #eee; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         
-        input, select, textarea { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #f0f0f0; box-sizing: border-box; font-size: 1rem; margin-top: 8px; color: #222; }
+        input, select, textarea { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #f0f0f0; box-sizing: border-box; font-size: 1rem; margin-top: 8px; color: #222; transition: border 0.3s; }
         .hub-set-badge { font-size: 0.75rem; color: var(--secondary); font-weight: bold; background: #fff1f1; padding: 4px 12px; border-radius: 12px; border: 1px solid #ffebeb; margin-top: 8px; display: inline-block; }
     </style>
 </head>
@@ -77,7 +76,7 @@
         <h1 style="color: var(--primary); margin-bottom: 30px;">Vic 賽事系統</h1>
         <button class="btn btn-primary" style="width: 250px;" onclick="showPage('staff-verify-page')">工作人員入口</button>
         <button class="btn btn-outline" style="width: 250px;" onclick="showPage('player-hub-page')">選手/觀眾大廳</button>
-        <div style="margin-top:auto; padding-bottom:40px; text-align:center; color:#95a5a6; cursor:pointer;" onclick="adminLogin()">⚙️<br>後台管理</div>
+        <div class="admin-entry" style="margin-top:auto; padding-bottom:40px; text-align:center; color:#95a5a6; cursor:pointer;" onclick="adminLogin()">⚙️<br>後台管理</div>
     </div>
 
     <div id="staff-verify-page" class="page">
@@ -203,7 +202,7 @@
     let loggedJudge = "";
     const courts = ['1', '2', '3', '4', '5', '6'];
 
-    // --- 核心更新 UI (精確處理 Game Point 與 Deuce) ---
+    // --- 核心更新 UI (包含紅色 Game Point 亮起邏輯) ---
     function updateUI(data) {
         if (!data) return;
         const sA = data.scoreA || 0, sB = data.scoreB || 0, target = data.targetScore || 21;
@@ -213,16 +212,12 @@
         elA.innerText = sA;
         elB.innerText = sB;
 
-        // 變色邏輯：賽點領先亮紅，平分回歸黑色
-        if (sA === sB) {
-            elA.style.color = "var(--text-main)";
-            elB.style.color = "var(--text-main)";
-        } else {
-            const isGPA = (sA >= target - 1 && sA > sB);
-            const isGPB = (sB >= target - 1 && sB > sA);
-            elA.style.color = isGPA ? "var(--secondary)" : "var(--text-main)";
-            elB.style.color = isGPB ? "var(--secondary)" : "var(--text-main)";
-        }
+        // 亮紅色邏輯：如果該隊領先且再拿一分就結束（或是 Deuce 狀態）
+        const isGamePointA = (sA >= target - 1 && sA > sB);
+        const isGamePointB = (sB >= target - 1 && sB > sA);
+        
+        elA.style.color = isGamePointA ? "var(--secondary)" : "var(--text-main)";
+        elB.style.color = isGamePointB ? "var(--secondary)" : "var(--text-main)";
 
         document.getElementById('display-nameA').innerText = data.nameA || "A 隊";
         document.getElementById('display-nameB').innerText = data.nameB || "B 隊";
@@ -237,7 +232,7 @@
         document.getElementById('status-note').style.display = (sA >= target-1 && sB >= target-1 && sA === sB) ? 'block' : 'none';
     }
 
-    // --- 大廳同步與亮紅邏輯 ---
+    // --- 大廳初始化與監聽 (大廳也要同步亮紅) ---
     const gridEl = document.getElementById('live-scoreboard-grid');
     gridEl.innerHTML = courts.map(id => `
         <div id="hub-court-${id}" style="background: white; border-radius: 15px; padding: 15px; display: flex; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #ddd; transition: all 0.3s;">
@@ -272,8 +267,9 @@
                     document.getElementById(`hub-sets-score-${id}`).innerText = `Sets: ${d.setsA || 0} : ${d.setsB || 0}`;
                     scoreEl.innerText = `${sA} : ${sB}`;
                 }
+                document.getElementById(`hub-set-${id}`).innerText = `Set ${d.currentSet || 1}`;
                 
-                // 大廳變色邏輯同步
+                // 大廳亮紅邏輯
                 const isGP = (sA >= target - 1 || sB >= target - 1) && (sA !== sB);
                 scoreEl.style.color = isGP ? "var(--secondary)" : "var(--primary)";
                 document.getElementById(`hub-court-${id}`).style.borderColor = (d.nameA === "準備中") ? "#ddd" : "var(--primary)";
@@ -293,12 +289,12 @@
         });
     });
 
-    // --- 裁判與斷線回溯邏輯 ---
+    // --- 以下為原有邏輯 (確保斷線重連與換邊功能) ---
     window.confirmStaff = () => {
         const selectBox = document.getElementById('staff-name-list');
         const manualInput = document.getElementById('staff-name-manual');
         loggedJudge = (selectBox.value === '其他') ? manualInput.value.trim() : selectBox.value;
-        if(!loggedJudge) { alert("請選擇或輸入姓名"); return; }
+        if(!loggedJudge) { alert("請選擇或輸入您的姓名"); return; }
         document.getElementById('current-judge-tag').innerText = `目前裁判：${loggedJudge}`;
         showPage('court-selection-page');
     };
@@ -308,12 +304,11 @@
         const snap = await getDoc(doc(db, "games", id));
         if (snap.exists()) {
             const d = snap.data();
-            // 斷線重連判定：若是同名裁判且場地在使用中，直接進入計分頁
             if (d.judgeName === loggedJudge && d.nameA !== "準備中") {
                 currentCourt = id; listenToCourt(id); showPage('scoring-page'); return;
             }
             if (btn && btn.dataset.inUse === "true") {
-                if (!confirm(`該場地正由 ${btn.dataset.activeJudge} 執法，確定進入？`)) return;
+                if (!confirm(`警告：該場地目前正由 ${btn.dataset.activeJudge} 執法中！確定要進入嗎？`)) return;
             }
         }
         currentCourt = id; showPage('pre-game-page'); 
@@ -337,7 +332,6 @@
         });
     }
 
-    // --- 比賽控制 ---
     window.startMatch = async () => {
         const snap = await getDoc(doc(db, "games", currentCourt));
         const t = snap.exists() ? (snap.data().targetScore || 21) : 21;
@@ -383,7 +377,7 @@
     };
 
     window.clearCourtData = async () => {
-        if(confirm("確定結束並清空場地？")){
+        if(confirm("清空資料？")){
             const snap = await getDoc(doc(db, "games", currentCourt));
             const t = snap.exists() ? (snap.data().targetScore || 21) : 21;
             await setDoc(doc(db, "games", currentCourt), { scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, nameA: "準備中", nameB: "準備中", currentSet: 1, server: 'A', history: [], isWaitingNext: false, targetScore: t, judgeName: "", sideSwapped: false });
@@ -391,7 +385,6 @@
         }
     };
 
-    // --- 工具 ---
     window.showPage = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
         document.getElementById(id).classList.add('active-page');
@@ -402,7 +395,7 @@
     window.smartBack = () => showPage('home-page');
     window.publishNotice = async () => {
         await setDoc(doc(db, "config", "announcement"), { content: document.getElementById('admin-announcement').value, imgUrl: document.getElementById('admin-img-url').value });
-        alert("公告已發布");
+        alert("已發布");
     };
 
     onSnapshot(doc(db, "config", "announcement"), (snap) => {
