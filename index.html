@@ -148,11 +148,21 @@
 
     <div id="player-hub-page" class="page">
         <h1>賽事資訊大廳</h1>
-        <div class="admin-box" style="border:none; text-align:center;">
-            <h3 id="announcement-text">載入中...</h3>
-            <img id="schedule-img-display" src="" style="max-width:100%; border-radius:10px; display:none; margin-top:15px;">
+        
+        <div class="admin-box" style="border:none; text-align:center; background: rgba(78, 205, 196, 0.1);">
+            <h3 id="announcement-text" style="margin-top:0;">載入中...</h3>
+            <img id="schedule-img-display" src="" style="max-width:100%; border-radius:10px; display:none; margin-top:10px;">
         </div>
-        <button class="btn btn-primary" onclick="showPage('home-page')">返回首頁</button>
+
+        <div style="margin-top: 30px; margin-bottom: 15px; font-weight: bold; color: var(--primary);">
+            <span class="animate__animated animate__pulse animate__infinite" style="display:inline-block; width:10px; height:10px; background:red; border-radius:50%; margin-right:5px;"></span>
+            LIVE 即時賽況
+        </div>
+
+        <div id="live-scoreboard-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 500px; padding: 10px;">
+            </div>
+
+        <button class="btn btn-primary" style="margin-top:30px;" onclick="showPage('home-page')">返回首頁</button>
     </div>
 
     <div id="admin-master-page" class="page">
@@ -196,7 +206,50 @@
     const db = getFirestore(app);
     let currentCourt = null;
     let loggedJudge = "";
+    // --- 即時賽況大廳監聽 ---
+    const courts = ['1', '2', '3', '4', '5', '6'];
+    const gridEl = document.getElementById('live-scoreboard-grid');
 
+    // 初始化 6 個場地的卡片 HTML
+    gridEl.innerHTML = courts.map(id => `
+        <div id="hub-court-${id}" style="background: white; border-radius: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #ddd;">
+            <div style="text-align: left;">
+                <div style="font-size: 0.8rem; color: #888;">場地 ${id}</div>
+                <div id="hub-names-${id}" style="font-weight: bold; font-size: 1rem;">準備中...</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div id="hub-score-${id}" style="font-size: 1.5rem; font-weight: 900; color: var(--primary);">0 : 0</div>
+                <div id="hub-set-${id}" style="font-size: 0.7rem; background: #eee; padding: 2px 6px; border-radius: 5px;">Set 0</div>
+            </div>
+        </div>
+    `).join('');
+
+    // 為每個場地建立監聽器
+    courts.forEach(id => {
+        onSnapshot(doc(db, "games", id), (snap) => {
+            if (snap.exists()) {
+                const d = snap.data();
+                const card = document.getElementById(`hub-court-${id}`);
+                const namesEl = document.getElementById(`hub-names-${id}`);
+                const scoreEl = document.getElementById(`hub-score-${id}`);
+                const setEl = document.getElementById(`hub-set-${id}`);
+
+                // 更新名字與比分
+                namesEl.innerText = `${d.nameA} vs ${d.nameB}`;
+                scoreEl.innerText = `${d.scoreA} : ${d.scoreB}`;
+                setEl.innerText = `Set ${d.currentSet}`;
+
+                // 如果正在比賽中，卡片邊框變色
+                if (d.scoreA > 0 || d.scoreB > 0) {
+                    card.style.borderColor = "var(--primary)";
+                    scoreEl.style.color = "var(--secondary)";
+                } else {
+                    card.style.borderColor = "#ddd";
+                    scoreEl.style.color = "var(--primary)";
+                }
+            }
+        });
+    });
     // 頁面切換邏輯
     window.showPage = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
@@ -390,3 +443,4 @@
 </script>
 </body>
 </html>
+
