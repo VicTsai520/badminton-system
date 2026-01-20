@@ -37,7 +37,7 @@
         
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); display: none; justify-content: center; align-items: center; z-index: 100; color: white; text-align: center; }
         .admin-box { background: white; width: 100%; max-width: 450px; padding: 20px; border-radius: 20px; margin-top: 15px; border: 2px solid #ddd; box-sizing: border-box; }
-        input, select, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; font-size: 1rem; margin-top: 5px; }
+        input, select, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; font-size: 1rem; margin-top: 5px; color: #222; }
         
         .hub-set-badge { font-size: 0.75rem; color: var(--secondary); font-weight: bold; background: #fff1f1; padding: 3px 10px; border-radius: 12px; border: 1px solid #ffebeb; margin-top: 6px; display: inline-block; }
     </style>
@@ -72,9 +72,11 @@
         <div class="admin-box">
             <select id="staff-name-list">
                 <option value="">-- 請選擇 --</option>
-                <option value="Vic">Vic</option><option value="Leo">Leo</option><option value="Amy">Amy</option><option value="其他">手動輸入...</option>
+                <option value="Vic">Vic</option><option value="Howard">Howard</option><option value="Alice">Alice</option><option value="其他">手動輸入...</option>
             </select>
-            <div id="manual-name-group" style="display:none; margin-top:10px;"><input type="text" id="staff-name-manual" placeholder="請輸入姓名"></div>
+            <div id="manual-name-group" style="display:none; margin-top:10px;">
+                <input type="text" id="staff-name-manual" placeholder="請在此輸入您的姓名">
+            </div>
             <button class="btn btn-primary" style="width:100%; margin-top:15px;" onclick="confirmStaff()">確定進入</button>
         </div>
     </div>
@@ -93,7 +95,7 @@
     </div>
 
     <div id="pre-game-page" class="page">
-        <h2 id="setup-title">場地設定 <span id="current-rule-display" style="font-size: 1.2rem; color: var(--secondary); font-weight: 900;">...</span></h2>
+        <h2 id="setup-title">場地設定 <span id="current-rule-display" style="font-size: 1.2rem; color: var(--secondary); font-weight: 900;">載入中...</span></h2>
         <div class="input-group" style="max-width:300px;">
             <label>隊伍 A</label><input type="text" id="teamA-names" placeholder="名稱">
             <br><br>
@@ -188,7 +190,32 @@
     let loggedJudge = "";
     const courts = ['1', '2', '3', '4', '5', '6'];
 
-    // --- 大廳初始化 ---
+    // --- 裁判登錄修正 ---
+    window.confirmStaff = () => {
+        const selectBox = document.getElementById('staff-name-list');
+        const manualInput = document.getElementById('staff-name-manual');
+        
+        if (selectBox.value === '其他') {
+            loggedJudge = manualInput.value.trim();
+        } else {
+            loggedJudge = selectBox.value;
+        }
+
+        if(!loggedJudge) {
+            alert("請選擇或輸入您的姓名");
+            return;
+        }
+
+        document.getElementById('current-judge-tag').innerText = `目前裁判：${loggedJudge}`;
+        showPage('court-selection-page');
+    };
+
+    // 監聽下拉選單顯示手動輸入框
+    document.getElementById('staff-name-list').addEventListener('change', (e) => {
+        document.getElementById('manual-name-group').style.display = (e.target.value === '其他') ? 'block' : 'none';
+    });
+
+    // --- 大廳初始化與監聽 ---
     const gridEl = document.getElementById('live-scoreboard-grid');
     gridEl.innerHTML = courts.map(id => `
         <div id="hub-court-${id}" style="background: white; border-radius: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #ddd;">
@@ -204,7 +231,6 @@
         </div>
     `).join('');
 
-    // --- 監聽大廳 ---
     courts.forEach(id => {
         onSnapshot(doc(db, "games", id), (snap) => {
             if (snap.exists()) {
@@ -223,7 +249,7 @@
         });
     });
 
-    // --- 裁判計分邏輯 ---
+    // --- 核心邏輯與 UI 更新 ---
     function updateUI(data) {
         if (!data) return;
         const sA = data.scoreA || 0, sB = data.scoreB || 0, target = data.targetScore || 21;
@@ -241,7 +267,6 @@
         document.getElementById('dot-A').className = data.server === 'A' ? 'serving-dot serving-active' : 'serving-dot';
         document.getElementById('dot-B').className = data.server === 'B' ? 'serving-dot serving-active' : 'serving-dot';
         document.getElementById('status-note').style.display = (sA >= target-1 && sB >= target-1 && sA === sB) ? 'block' : 'none';
-        // 同步 Pre-game 頁面的顯示，防止載入中
         document.getElementById('current-rule-display').innerText = `${target} 分制`;
     }
 
@@ -268,7 +293,6 @@
         });
     }
 
-    // --- 管理員：一次修改全場地 ---
     window.updateAllCourtsRule = async () => {
         const target = parseInt(document.getElementById('rule-score-target').value);
         if(confirm(`確定要將所有場地 (1-6) 統一更改為 ${target} 分制嗎？`)) {
@@ -282,7 +306,6 @@
         }
     };
 
-    // --- 其餘功能與清空 ---
     window.clearCourtData = async () => {
         if(confirm("結束這場比賽？資料將清空並顯示準備中。")){
             const snap = await getDoc(doc(db, "games", currentCourt));
@@ -291,12 +314,20 @@
             showPage('court-selection-page');
         }
     };
+
     window.startMatch = async () => {
         const snap = await getDoc(doc(db, "games", currentCourt));
         const t = snap.exists() ? (snap.data().targetScore || 21) : 21;
-        await setDoc(doc(db, "games", currentCourt), { scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, nameA: document.getElementById('teamA-names').value || "A 隊", nameB: document.getElementById('teamB-names').value || "B 隊", currentSet: 1, server: 'A', history: [], isWaitingNext: false, targetScore: t, judgeName: loggedJudge });
+        await setDoc(doc(db, "games", currentCourt), { 
+            scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, 
+            nameA: document.getElementById('teamA-names').value || "A 隊", 
+            nameB: document.getElementById('teamB-names').value || "B 隊", 
+            currentSet: 1, server: 'A', history: [], 
+            isWaitingNext: false, targetScore: t, judgeName: loggedJudge 
+        });
         showPage('scoring-page');
     };
+
     window.addScore = async (team) => {
         const docRef = doc(db, "games", currentCourt);
         const d = (await getDoc(docRef)).data();
@@ -308,6 +339,7 @@
         const hist = d.history || []; hist.push({scoreA: d.scoreA, scoreB: d.scoreB, server: d.server});
         await updateDoc(docRef, { scoreA: nA, scoreB: nB, server: team, history: hist.slice(-10), isWaitingNext: win });
     };
+
     window.confirmNextSet = async () => {
         const docRef = doc(db, "games", currentCourt);
         const d = (await getDoc(docRef)).data();
@@ -315,6 +347,7 @@
         await updateDoc(docRef, { setsA: winner==='A'?d.setsA+1:d.setsA, setsB: winner==='B'?d.setsB+1:d.setsB, scoreA: 0, scoreB: 0, currentSet: d.currentSet+1, server: winner, isWaitingNext: false, history: [] });
         document.getElementById('game-over-overlay').style.display = 'none';
     };
+
     window.undo = async () => {
         const docRef = doc(db, "games", currentCourt);
         const d = (await getDoc(docRef)).data();
@@ -324,6 +357,7 @@
         }
         document.getElementById('game-over-overlay').style.display = 'none';
     };
+
     window.showPage = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
         document.getElementById(id).classList.add('active-page');
@@ -331,13 +365,6 @@
     };
     window.smartBack = () => showPage('home-page');
     window.verifyStaff = () => { if(document.getElementById('staff-pass').value==='1234') showPage('staff-select-page'); else alert('密碼錯誤'); };
-    window.confirmStaff = () => {
-        const val = document.getElementById('staff-name-list').value;
-        loggedJudge = (val === '其他') ? document.getElementById('staff-name-manual').value : val;
-        if(!loggedJudge) return alert("請輸入姓名");
-        document.getElementById('current-judge-tag').innerText = `目前裁判：${loggedJudge}`;
-        showPage('court-selection-page');
-    };
     window.adminLogin = () => { if(prompt("管理員密碼")==='9999') showPage('admin-master-page'); };
     window.publishNotice = async () => {
         await setDoc(doc(db, "config", "announcement"), { content: document.getElementById('admin-announcement').value, imgUrl: document.getElementById('admin-img-url').value });
@@ -347,6 +374,7 @@
         await setDoc(doc(db, "config", "appearance"), { logoUrl: document.getElementById('admin-logo-url').value });
         alert("Logo 已更新");
     };
+
     onSnapshot(doc(db, "config", "announcement"), (snap) => {
         if(snap.exists()){
             const d = snap.data();
@@ -355,6 +383,7 @@
             if(d.imgUrl) { img.src = d.imgUrl; img.style.display = 'block'; } else img.style.display = 'none';
         }
     });
+
     onSnapshot(doc(db, "config", "appearance"), (snap) => {
         if(snap.exists()){
             const d = snap.data();
@@ -363,6 +392,7 @@
             div.style.fontSize = d.logoUrl ? "0px" : "60px";
         }
     });
+
     window.switchSide = () => { const c = document.getElementById('team-container'); c.style.flexDirection = (c.style.flexDirection==='row-reverse') ? 'row' : 'row-reverse'; };
     window.manualServe = async () => { const docRef = doc(db, "games", currentCourt); const s = (await getDoc(docRef)).data().server; await updateDoc(docRef, { server: (s==='A'?'B':'A') }); };
     window.resetMatch = async () => { if (confirm("確定重設本局？")) startMatch(); };
