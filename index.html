@@ -188,10 +188,11 @@
             <select id="rule-score-target" style="margin-top:10px;"><option value="11">11 分制</option><option value="15">15 分制</option><option value="21">21 分制</option></select>
             <button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="updateAllCourtsRule()">套用至所有場地</button>
             <hr>
-            <h4>2. 公告與賽程圖</h4>
-            <textarea id="admin-announcement" placeholder="公告內容..."></textarea>
-            <input type="text" id="admin-img-url" placeholder="賽程圖網址..." style="margin-top:10px;">
-            <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="publishNotice()">發布公告</button>
+            <h4>2. 公告與圖片管理</h4>
+            <textarea id="admin-announcement" placeholder="大廳公告內容..."></textarea>
+            <input type="text" id="admin-home-img-url" placeholder="首頁 Logo 圖片網址..." style="margin-top:10px;">
+            <input type="text" id="admin-img-url" placeholder="大廳賽程圖網址..." style="margin-top:10px;">
+            <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="publishNotice()">發布設定</button>
         </div>
         <button class="btn btn-outline" onclick="showPage('home-page')">退出後台</button>
     </div>
@@ -412,16 +413,40 @@
     window.adminLogin = () => { if(prompt("密碼")==='9999') showPage('admin-master-page'); };
     window.smartBack = () => showPage('home-page');
     window.publishNotice = async () => {
-        await setDoc(doc(db, "config", "announcement"), { content: document.getElementById('admin-announcement').value, imgUrl: document.getElementById('admin-img-url').value });
-        alert("已發布");
+        await setDoc(doc(db, "config", "announcement"), { 
+            content: document.getElementById('admin-announcement').value, 
+            homeImg: document.getElementById('admin-home-img-url').value, // 新增首頁圖網址
+            imgUrl: document.getElementById('admin-img-url').value 
+        });
+        alert("設定已更新");
     };
 
     onSnapshot(doc(db, "config", "announcement"), (snap) => {
         if(snap.exists()){
             const d = snap.data();
-            document.getElementById('announcement-text').innerText = d.content || "暫無公告";
-            const img = document.getElementById('schedule-img-display');
-            if(d.imgUrl) { img.src = d.imgUrl; img.style.display = 'block'; } else img.style.display = 'none';
+            // --- 1. 更新首頁圖片 (Home Page) ---
+        const homeLogo = document.getElementById('home-logo-display');
+        if(d.homeImg && d.homeImg.trim() !== "") {
+            homeLogo.innerHTML = `<img src="${d.homeImg}" style="max-width: 80%; max-height: 180px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">`;
+        } else {
+            homeLogo.innerHTML = `<span style="font-size: 80px;">🏸</span>`;
+        }
+
+        // --- 2. 更新大廳內容 (Player Hub) ---
+        document.getElementById('announcement-text').innerText = d.content || "暫無公告";
+        const hubImg = document.getElementById('schedule-img-display');
+        if(d.imgUrl) { 
+            hubImg.src = d.imgUrl; 
+            hubImg.style.display = 'block'; 
+        } else { 
+            hubImg.style.display = 'none'; 
+        }
+
+        // 順便把網址填回後台輸入框，方便下次修改
+        if(document.getElementById('admin-home-img-url')) {
+            document.getElementById('admin-home-img-url').value = d.homeImg || "";
+            document.getElementById('admin-announcement').value = d.content || "";
+            document.getElementById('admin-img-url').value = d.imgUrl || "";
         }
     });
 
@@ -435,3 +460,4 @@
 </script>
 </body>
 </html>
+
