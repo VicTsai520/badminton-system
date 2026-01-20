@@ -124,9 +124,9 @@
     </div>
 
     <div id="scoring-page" class="page">
-        <div id="current-set-label" style="background:var(--accent); padding:5px 15px; border-radius:15px; font-weight:bold; margin-bottom:10px;">第 1 局</div>
+        <div id="current-set-label" style="background:var(--accent); padding:5px 15px; border-radius:15px; font-weight:bold; margin-bottom:10px;">載入中...</div>
         <div class="scoreboard">
-            <div id="team-layout" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="flex: 1;">
                     <div id="set-won-A" style="font-weight:bold; color:var(--secondary);">Sets: 0</div>
                     <div id="dot-A" class="serving-dot"></div>
@@ -157,8 +157,7 @@
             <h3 id="announcement-text" style="margin:0;">載入公告中...</h3>
             <img id="schedule-img-display" src="" style="max-width:100%; border-radius:10px; display:none; margin-top:15px;">
         </div>
-        <div id="live-scoreboard-grid" style="width: 100%; max-width: 500px;">
-            </div>
+        <div id="live-scoreboard-grid" style="width: 100%; max-width: 500px;"></div>
     </div>
 
     <div id="admin-master-page" class="page">
@@ -186,7 +185,6 @@
     <button id="global-back-btn" class="back-fab" onclick="smartBack()">返回</button>
 
 <script type="module">
-    // Firebase 初始化
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -201,34 +199,25 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    
     let currentCourt = null;
     let loggedJudge = "";
     const courtList = ['1', '2', '3', '4', '5', '6'];
 
-    // --- 頁面跳轉 ---
+    // --- 導覽功能 ---
     window.showPage = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
         const target = document.getElementById(id);
         if(target) target.classList.add('active-page');
-        
-        // 除了首頁，其他頁面都顯示返回按鈕
         document.getElementById('global-back-btn').style.display = (id === 'home-page') ? 'none' : 'flex';
-        window.scrollTo(0, 0);
+        window.scrollTo(0,0);
     };
-
     window.smartBack = () => showPage('home-page');
 
     // --- 裁判登入 ---
     document.getElementById('staff-name-list').onchange = (e) => {
         document.getElementById('staff-name-manual').style.display = (e.target.value === '其他') ? 'block' : 'none';
     };
-
-    window.verifyStaff = () => {
-        if(document.getElementById('staff-pass').value === '1234') showPage('staff-select-page');
-        else alert('密碼錯誤');
-    };
-
+    window.verifyStaff = () => { if(document.getElementById('staff-pass').value === '1234') showPage('staff-select-page'); else alert('密碼錯誤'); };
     window.confirmStaff = () => {
         const sel = document.getElementById('staff-name-list').value;
         loggedJudge = (sel === '其他') ? document.getElementById('staff-name-manual').value : sel;
@@ -237,62 +226,55 @@
         showPage('court-selection-page');
     };
 
-    // --- 後台管理邏輯 ---
-    window.adminLogin = () => { if(prompt("管理員密碼") === '9999') showPage('admin-master-page'); };
-
+    // --- 後台管理 ---
+    window.adminLogin = () => { if(prompt("管理密碼") === '9999') showPage('admin-master-page'); };
+    
     window.publishNotice = async () => {
         await setDoc(doc(db, "config", "announcement"), { 
             content: document.getElementById('admin-announcement').value, 
             homeImg: document.getElementById('admin-home-img-url').value,
             imgUrl: document.getElementById('admin-img-url').value 
         });
-        alert("設定已同步更新");
+        alert("已更新");
     };
 
-    // 監聽後台設定（首頁圖片、大廳圖片、公告）
+    window.updateAllCourtsRule = async () => {
+        const target = parseInt(document.getElementById('rule-score-target').value);
+        if(!confirm(`確定要將所有場地改為 ${target} 分制嗎？`)) return;
+        const promises = courtList.map(id => updateDoc(doc(db, "games", id), { targetScore: target }));
+        await Promise.all(promises);
+        alert("全場規則已更新");
+    };
+
     onSnapshot(doc(db, "config", "announcement"), (snap) => {
         if(snap.exists()){
             const d = snap.data();
-            // 1. 更新首頁 Logo
-            const homeLogo = document.getElementById('home-logo-display');
-            if(d.homeImg && d.homeImg.trim() !== "") {
-                homeLogo.innerHTML = `<img src="${d.homeImg}" style="max-width:80%; max-height:180px; border-radius:15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">`;
-            } else {
-                homeLogo.innerHTML = `<span style="font-size: 80px;">🏸</span>`;
-            }
-            // 2. 更新大廳公告
-            document.getElementById('announcement-text').innerText = d.content || "歡迎參加比賽";
-            const img = document.getElementById('schedule-img-display');
-            if(d.imgUrl) { img.src = d.imgUrl; img.style.display = 'block'; } else img.style.display = 'none';
-            // 3. 反填回後台輸入框
-            if(document.getElementById('admin-home-img-url')) {
-                document.getElementById('admin-home-img-url').value = d.homeImg || "";
-                document.getElementById('admin-announcement').value = d.content || "";
-                document.getElementById('admin-img-url').value = d.imgUrl || "";
-            }
+            const logo = document.getElementById('home-logo-display');
+            logo.innerHTML = (d.homeImg) ? `<img src="${d.homeImg}" style="max-width:80%; max-height:180px; border-radius:15px;">` : `<span style="font-size: 80px;">🏸</span>`;
+            document.getElementById('announcement-text').innerText = d.content || "歡迎參加";
+            const sImg = document.getElementById('schedule-img-display');
+            if(d.imgUrl) { sImg.src = d.imgUrl; sImg.style.display = 'block'; } else sImg.style.display = 'none';
         }
     });
 
-    // --- 比賽流程邏輯 ---
+    // --- 比賽邏輯 ---
     window.selectCourt = async (id) => {
         currentCourt = id;
-        document.getElementById('setup-court-label').innerText = `場地 ${id} 設定`;
         const snap = await getDoc(doc(db, "games", id));
-        if(snap.exists() && snap.data().nameA !== "準備中") {
-            showPage('scoring-page');
-        } else {
-            showPage('pre-game-page');
-        }
+        if(snap.exists() && snap.data().nameA !== "準備中") showPage('scoring-page');
+        else showPage('pre-game-page');
         listenToCourt(id);
     };
 
     window.startMatch = async () => {
+        const snap = await getDoc(doc(db, "games", currentCourt));
+        const t = snap.exists() ? (snap.data().targetScore || 21) : 21;
         await setDoc(doc(db, "games", currentCourt), { 
             scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, 
             nameA: document.getElementById('teamA-names').value || "A 隊", 
             nameB: document.getElementById('teamB-names').value || "B 隊", 
             currentSet: 1, server: 'A', history: [], isWaitingNext: false, 
-            targetScore: 21, judgeName: loggedJudge, sideSwapped: false 
+            targetScore: t, judgeName: loggedJudge, sideSwapped: false 
         });
         showPage('scoring-page');
     };
@@ -300,97 +282,74 @@
     function listenToCourt(id) {
         onSnapshot(doc(db, "games", id), (snap) => {
             if (snap.exists() && currentCourt === id) {
-                const data = snap.data();
-                document.getElementById('score-A').innerText = data.scoreA;
-                document.getElementById('score-B').innerText = data.scoreB;
-                document.getElementById('display-nameA').innerText = data.nameA;
-                document.getElementById('display-nameB').innerText = data.nameB;
-                document.getElementById('set-won-A').innerText = `Sets: ${data.setsA || 0}`;
-                document.getElementById('set-won-B').innerText = `Sets: ${data.setsB || 0}`;
-                document.getElementById('dot-A').className = data.server === 'A' ? 'serving-dot serving-active' : 'serving-dot';
-                document.getElementById('dot-B').className = data.server === 'B' ? 'serving-dot serving-active' : 'serving-dot';
-                
-                if(data.isWaitingNext) {
-                    document.getElementById('winner-text').innerText = `${data.scoreA > data.scoreB ? data.nameA : data.nameB} 獲勝！`;
-                    document.getElementById('final-score-display').innerText = `${data.scoreA} : ${data.scoreB}`;
+                const d = snap.data();
+                document.getElementById('score-A').innerText = d.scoreA;
+                document.getElementById('score-B').innerText = d.scoreB;
+                document.getElementById('display-nameA').innerText = d.nameA;
+                document.getElementById('display-nameB').innerText = d.nameB;
+                document.getElementById('set-won-A').innerText = `Sets: ${d.setsA || 0}`;
+                document.getElementById('set-won-B').innerText = `Sets: ${d.setsB || 0}`;
+                document.getElementById('current-set-label').innerText = `第 ${d.currentSet} 局 (${d.targetScore || 21}分制)`;
+                document.getElementById('dot-A').className = d.server === 'A' ? 'serving-dot serving-active' : 'serving-dot';
+                document.getElementById('dot-B').className = d.server === 'B' ? 'serving-dot serving-active' : 'serving-dot';
+                if(d.isWaitingNext) {
+                    document.getElementById('winner-text').innerText = `${d.scoreA > d.scoreB ? d.nameA : d.nameB} 獲勝！`;
+                    document.getElementById('final-score-display').innerText = `${d.scoreA} : ${d.scoreB}`;
                     document.getElementById('game-over-overlay').style.display = 'flex';
                 }
             }
         });
     }
 
-    // --- 計分操作 ---
     window.addScore = async (team) => {
-        const docRef = doc(db, "games", currentCourt);
-        const d = (await getDoc(docRef)).data();
+        const ref = doc(db, "games", currentCourt);
+        const d = (await getDoc(ref)).data();
+        const t = d.targetScore || 21;
         let nA = (team === 'A') ? d.scoreA + 1 : d.scoreA;
         let nB = (team === 'B') ? d.scoreB + 1 : d.scoreB;
-        const target = d.targetScore || 21;
-        const win = (nA >= target && nA-nB >= 2) || (nB >= target && nB-nA >= 2) || nA === 30 || nB === 30;
-        
-        const hist = d.history || [];
-        hist.push({scoreA: d.scoreA, scoreB: d.scoreB, server: d.server});
+        const win = (nA >= t && nA-nB >= 2) || (nB >= t && nB-nA >= 2) || nA === 30 || nB === 30;
+        const h = d.history || []; h.push({scoreA: d.scoreA, scoreB: d.scoreB, server: d.server});
+        await updateDoc(ref, { scoreA: nA, scoreB: nB, server: team, isWaitingNext: win, history: h.slice(-5) });
+    };
 
-        await updateDoc(docRef, { scoreA: nA, scoreB: nB, server: team, isWaitingNext: win, history: hist.slice(-5) });
+    window.confirmNextSet = async () => {
+        const ref = doc(db, "games", currentCourt);
+        const d = (await getDoc(ref)).data();
+        const winA = d.scoreA > d.scoreB;
+        await updateDoc(ref, { setsA: winA?d.setsA+1:d.setsA, setsB: !winA?d.setsB+1:d.setsB, scoreA: 0, scoreB: 0, currentSet: d.currentSet+1, isWaitingNext: false, history: [] });
+        document.getElementById('game-over-overlay').style.display = 'none';
     };
 
     window.undo = async () => {
-        const docRef = doc(db, "games", currentCourt);
-        const d = (await getDoc(docRef)).data();
+        const ref = doc(db, "games", currentCourt);
+        const d = (await getDoc(ref)).data();
         if(d.history && d.history.length > 0) {
             const last = d.history.pop();
-            await updateDoc(docRef, { ...last, history: d.history, isWaitingNext: false });
+            await updateDoc(ref, { ...last, history: d.history, isWaitingNext: false });
             document.getElementById('game-over-overlay').style.display = 'none';
         }
     };
 
-    window.confirmNextSet = async () => {
-        const docRef = doc(db, "games", currentCourt);
-        const d = (await getDoc(docRef)).data();
-        const winA = d.scoreA > d.scoreB;
-        await updateDoc(docRef, { 
-            setsA: winA ? (d.setsA+1) : d.setsA, 
-            setsB: !winA ? (d.setsB+1) : d.setsB, 
-            scoreA: 0, scoreB: 0, currentSet: d.currentSet+1, isWaitingNext: false, history: [] 
-        });
-        document.getElementById('game-over-overlay').style.display = 'none';
-    };
-
     window.clearCourtData = async () => {
-        if(confirm("確定結束比賽並清空此場地？")) {
+        if(confirm("確定結束並清空場地？")) {
             await setDoc(doc(db, "games", currentCourt), { nameA: "準備中", nameB: "準備中", scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, currentSet: 1, judgeName: "" });
             showPage('court-selection-page');
         }
     };
 
-    // --- 大廳即時卡片監聽 ---
+    // 大廳顯示
     courtList.forEach(id => {
         onSnapshot(doc(db, "games", id), (snap) => {
             const grid = document.getElementById('live-scoreboard-grid');
             let card = document.getElementById(`hub-card-${id}`);
-            if(!card) {
-                card = document.createElement('div');
-                card.id = `hub-card-${id}`;
-                card.className = 'hub-card';
-                grid.appendChild(card);
-            }
+            if(!card) { card = document.createElement('div'); card.id = `hub-card-${id}`; card.className = 'hub-card'; grid.appendChild(card); }
             if(snap.exists()){
                 const d = snap.data();
-                card.innerHTML = `
-                    <div style="flex:1">
-                        <div style="font-size:0.7rem; color:#888;">場地 ${id}</div>
-                        <div style="font-weight:bold;">${d.nameA} vs ${d.nameB}</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:1.2rem; font-weight:900; color:var(--primary);">${d.scoreA} : ${d.scoreB}</div>
-                        <div style="font-size:0.7rem; background:#eee; padding:2px 5px; border-radius:4px;">Set ${d.currentSet || 1}</div>
-                    </div>
-                `;
+                card.innerHTML = `<div style="flex:1"><div style="font-size:0.7rem; color:#888;">場地 ${id}</div><div style="font-weight:bold;">${d.nameA} vs ${d.nameB}</div></div><div style="text-align:right;"><div style="font-size:1.2rem; font-weight:900; color:var(--primary);">${d.scoreA} : ${d.scoreB}</div><div style="font-size:0.7rem; background:#eee; padding:2px 5px; border-radius:4px;">Set ${d.currentSet}</div></div>`;
                 card.style.display = (d.nameA === "準備中") ? "none" : "flex";
             }
         });
     });
-
 </script>
 </body>
 </html>
