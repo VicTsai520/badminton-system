@@ -229,6 +229,7 @@
         onSnapshot(doc(db, "games", id), (snap) => {
             if (snap.exists()) {
                 const d = snap.data();
+                const target = d.targetScore || 21;
                 const card = document.getElementById(`hub-court-${id}`);
                 const namesEl = document.getElementById(`hub-names-${id}`);
                 const scoreEl = document.getElementById(`hub-score-${id}`);
@@ -240,12 +241,14 @@
                 setEl.innerText = `Set ${d.currentSet}`;
 
                 // 如果正在比賽中，卡片邊框變色
-                if (d.scoreA > 0 || d.scoreB > 0) {
-                    card.style.borderColor = "var(--primary)";
+                // --- 大廳局點變色邏輯 ---
+                // 如果任一隊達到局點，整個比分文字變紅並加粗
+                if (d.scoreA >= target - 1 || d.scoreB >= target - 1) {
                     scoreEl.style.color = "var(--secondary)";
+                    scoreEl.style.fontWeight = "900";
                 } else {
-                    card.style.borderColor = "#ddd";
                     scoreEl.style.color = "var(--primary)";
+                    scoreEl.style.fontWeight = "900";
                 }
             }
         });
@@ -350,6 +353,16 @@
 
     function updateUI(data) {
         const sA = data.scoreA, sB = data.scoreB, target = data.targetScore || 21;
+        const scoreA_el = document.getElementById('score-A');
+        const scoreB_el = document.getElementById('score-B');
+        scoreA_el.innerText = sA;
+        scoreB_el.innerText = sB;
+
+        // --- 局點 (Game Point) 變色邏輯 ---
+        // 當分數達到 target-1 時變紅，否則恢復主色
+        scoreA_el.style.color = (sA >= target - 1) ? "var(--secondary)" : "var(--text-main)";
+        scoreB_el.style.color = (sB >= target - 1) ? "var(--secondary)" : "var(--text-main)";
+        
         document.getElementById('current-rule-display').innerText = `${target}分制`;
         document.getElementById('score-A').innerText = sA;
         document.getElementById('score-B').innerText = sB;
@@ -443,4 +456,5 @@
 </script>
 </body>
 </html>
+
 
