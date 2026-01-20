@@ -3,191 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vic's Badminton System Ultimate</title> 
+    <title>Vic's Badminton Pro</title> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
-        :root { --bg-color: #f0f7f4; --primary: #4ecdc4; --secondary: #ff6b6b; --accent: #ffe66d; --text-main: #2f3e46; --card-bg: #ffffff; }
-        body { font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; overflow-x: hidden; }
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --primary: #2dd4bf;
+            --secondary: #fb7185;
+            --accent: #fbbf24;
+            --text-main: #f8fafc;
+        }
         
-        /* 頁面切換核心 */
-        .page { display: none; min-height: 100vh; padding: 20px; box-sizing: border-box; flex-direction: column; align-items: center; }
-        .active-page { display: flex !important; }
+        body { 
+            font-family: 'Inter', 'Segoe UI', 'Microsoft JhengHei', sans-serif; 
+            background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+            color: var(--text-main); margin: 0; min-height: 100vh; overflow-x: hidden;
+        }
 
-        /* [修正1] 按鈕生動感樣式 */
+        /* 頁面切換 */
+        .page { display: none; min-height: 100vh; padding: 25px; box-sizing: border-box; flex-direction: column; align-items: center; }
+        .active-page { display: flex !important; animation: fadeIn 0.4s ease-out; }
+
+        /* 頂級發光按鈕 */
         .btn { 
-            padding: 15px 25px; border-radius: 50px; border: none; font-size: 1rem; font-weight: bold; 
-            cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin: 10px; 
-            box-shadow: 0 6px 0px rgba(0,0,0,0.1); display: inline-block; text-align: center; position: relative; top: 0;
+            padding: 16px 32px; border-radius: 16px; border: none; font-size: 1rem; font-weight: 700; 
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            margin: 10px; position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-        .btn:active { top: 4px; box-shadow: 0 2px 0px rgba(0,0,0,0.1); transform: scale(0.98); }
-        
-        .btn-primary { background: linear-gradient(135deg, #4ecdc4 0%, #45b7af 100%); color: white; }
-        .btn-outline { background: white; border: 2px solid var(--primary); color: var(--primary); }
-        .btn-secondary { background: linear-gradient(135deg, #ff6b6b 0%, #ee5253 100%); color: white; }
-        .btn-gray { background-color: #95a5a6; color: white; }
+        .btn:active { transform: scale(0.95); }
+        .btn-primary { background: var(--primary); color: #0f172a; box-shadow: 0 0 20px rgba(45, 212, 191, 0.3); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-secondary { background: var(--secondary); color: white; box-shadow: 0 0 20px rgba(251, 113, 133, 0.3); }
+        .btn-gray { background: rgba(255,255,255,0.1); color: white; backdrop-filter: blur(10px); }
 
-        /* 場地按鈕生動感 */
-        .court-btn { 
-            padding: 25px; border-radius: 20px; border: 2px solid #eee; background: white; 
-            font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        /* 場地卡片 - 大廳專用 */
+        .hub-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 500px; }
+        .hub-card { 
+            background: var(--card-bg); border-radius: 20px; padding: 20px; 
+            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px);
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.3s;
         }
-        .court-btn:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .hub-card.active { border-left: 4px solid var(--primary); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .hub-card.idle { opacity: 0.4; border: 1px dashed rgba(255,255,255,0.2); }
 
-        /* 右下角返回按鈕 */
+        /* 計分板設計 */
+        .scoreboard { 
+            width: 100%; max-width: 500px; background: var(--card-bg); 
+            border-radius: 30px; padding: 30px; border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); text-align: center;
+        }
+        .score-num { font-size: 6.5rem; font-weight: 900; margin: 10px 0; cursor: pointer; color: var(--text-main); text-shadow: 0 0 30px rgba(255,255,255,0.1); }
+        .set-score { font-size: 1.5rem; color: var(--accent); font-weight: bold; }
+
+        /* 呼吸燈 */
+        .serving-dot { width: 12px; height: 12px; background: var(--primary); border-radius: 50%; margin: 10px auto; visibility: hidden; }
+        .serving-active { visibility: visible; animation: glow 1.5s infinite; }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px var(--primary); opacity: 1; } 50% { box-shadow: 0 0 20px var(--primary); opacity: 0.5; } }
+
+        /* 返回按鈕 */
         .back-fab { 
-            position: fixed; right: 20px; bottom: 20px; 
-            width: 65px; height: 65px; background: var(--secondary); color: white; 
-            border-radius: 50%; display: none; justify-content: center; align-items: center; 
-            z-index: 999; border: none; box-shadow: 0 6px 15px rgba(255,107,107,0.4); 
-            font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: 0.2s;
+            position: fixed; right: 25px; bottom: 25px; width: 60px; height: 60px; 
+            background: var(--secondary); color: white; border-radius: 50%; 
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+            border: none; box-shadow: 0 10px 20px rgba(0,0,0,0.3); font-weight: bold;
         }
-        .back-fab:active { transform: scale(0.9); }
-        
-        /* 計分板與呼吸燈 */
-        .scoreboard { width: 100%; max-width: 500px; background: white; border-radius: 25px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; }
-        .score-num { font-size: 5.8rem; font-weight: 900; margin: 0; cursor: pointer; user-select: none; line-height: 1; transition: 0.1s; }
-        .score-num:active { transform: scale(0.9); opacity: 0.7; }
-        
-        .serving-dot { width: 16px; height: 16px; background: var(--secondary); border-radius: 50%; margin: 8px auto; visibility: hidden; }
-        .serving-active { visibility: visible !important; animation: breathe 1.2s infinite ease-in-out; }
-        
-        @keyframes breathe {
-            0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 15px var(--secondary); }
-            50% { opacity: 0.3; transform: scale(1.4); box-shadow: 0 0 5px var(--secondary); }
+
+        /* 彈窗修正 */
+        .overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(15, 23, 42, 0.95); display: none; 
+            justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(10px);
         }
-        
-        .admin-box { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 25px; margin-top: 15px; box-sizing: border-box; color: var(--text-main); text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        input, select, textarea { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #f0f0f0; box-sizing: border-box; font-size: 1rem; margin-top: 8px; }
-        
-        /* [修正2] 大廳顯示優化 */
-        .hub-card { background: white; border-radius: 15px; padding: 15px; display: flex; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #ccc; margin-bottom: 12px; width: 100%; box-sizing: border-box; transition: 0.3s; }
-        .hub-card.active { border-left-color: var(--primary); }
-        .hub-card.idle { opacity: 0.6; background: #fafafa; }
+
+        /* 管理區域 */
+        .admin-box { background: var(--card-bg); width: 100%; max-width: 450px; padding: 25px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); }
+        input, select, textarea { 
+            width: 100%; padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); 
+            background: rgba(0,0,0,0.2); color: white; margin-top: 10px; font-size: 1rem;
+        }
     </style>
 </head>
 <body>
 
     <div id="game-over-overlay" class="overlay">
-        <div class="animate__animated animate__zoomIn">
-            <h2 id="winner-text" style="font-size: 2.8rem; color: var(--primary);">獲勝！</h2>
-            <div id="final-score-display" style="font-size: 4.5rem; font-weight: 900; margin-bottom: 25px; color: white;">0 : 0</div>
-            <button class="btn btn-primary" style="width: 85%;" onclick="confirmNextSet()">下一局 / 結束</button>
+        <div class="animate__animated animate__zoomIn text-center" style="text-align:center;">
+            <h3 id="winner-text" style="color: var(--primary); font-size: 2rem;">WINNER!</h3>
+            <div id="final-score-display" style="font-size: 5rem; font-weight: 900; margin: 20px 0;">21 : 19</div>
+            <button class="btn btn-primary" style="margin: 0 auto;" onclick="confirmNextSet()">下一局 / 結束比賽</button>
         </div>
     </div>
 
     <div id="home-page" class="page active-page">
-        <div id="home-logo-display" style="margin-top: 40px; min-height: 180px; display: flex; align-items: center; justify-content: center; width: 100%;">
-            <span style="font-size: 80px;">🏸</span>
+        <div id="home-logo-display" style="margin: 60px 0 30px;">
+            <span style="font-size: 100px;">🏸</span>
         </div>
-        <h1 style="color: var(--primary); margin-bottom: 30px;">Vic 賽事系統</h1>
-        <button class="btn btn-primary" style="width: 250px;" onclick="showPage('staff-verify-page')">工作人員入口</button>
-        <button class="btn btn-outline" style="width: 250px;" onclick="showPage('player-hub-page')">選手/觀眾大廳</button>
-        <div style="margin-top:auto; padding-bottom:40px; color:#95a5a6; cursor:pointer;" onclick="adminLogin()">⚙️ 後台管理</div>
+        <h1 style="font-size: 2.2rem; background: linear-gradient(to right, #2dd4bf, #fb7185); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">VIC BADMINTON</h1>
+        <p style="opacity: 0.6; margin-bottom: 40px;">Professional Scoring System</p>
+        
+        <button class="btn btn-primary" style="width: 280px;" onclick="showPage('staff-verify-page')">裁判模式</button>
+        <button class="btn btn-outline" style="width: 280px;" onclick="showPage('player-hub-page')">即時賽況</button>
+        
+        <div style="margin-top:auto; padding-bottom:30px; opacity: 0.4; font-size: 0.8rem; cursor: pointer;" onclick="adminLogin()">SYSTEM ADMIN</div>
     </div>
 
     <div id="staff-verify-page" class="page">
-        <h2>工作人員登入</h2>
-        <input type="password" id="staff-pass" placeholder="輸入密碼 (1234)" style="max-width:300px;">
-        <button class="btn btn-primary" onclick="verifyStaff()">下一步</button>
+        <h2 style="margin-bottom: 30px;">身份驗證</h2>
+        <div class="admin-box">
+            <input type="password" id="staff-pass" placeholder="請輸入裁判密碼">
+            <button class="btn btn-primary" style="width: 100%; margin: 20px 0 0;" onclick="verifyStaff()">登入系統</button>
+        </div>
     </div>
 
     <div id="staff-select-page" class="page">
-        <h2>執法裁判登記</h2>
+        <h2>選擇裁判員</h2>
         <div class="admin-box">
             <select id="staff-name-list">
-                <option value="">-- 請選擇您的姓名 --</option>
                 <option value="Vic">Vic</option>
                 <option value="Howard">Howard</option>
                 <option value="其他">手動輸入...</option>
             </select>
-            <input type="text" id="staff-name-manual" placeholder="請在此輸入您的姓名" style="display:none; margin-top:10px;">
-            <button class="btn btn-primary" style="width:100%; margin-top:15px;" onclick="confirmStaff()">確定進入</button>
+            <input type="text" id="staff-name-manual" placeholder="輸入姓名" style="display:none;">
+            <button class="btn btn-primary" style="width: 100%; margin-top: 20px;" onclick="confirmStaff()">進入場地選擇</button>
         </div>
     </div>
 
     <div id="court-selection-page" class="page">
-        <div id="current-judge-display" style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">裁判：未登錄</div>
-        <h2 style="margin-bottom: 20px;">選擇場地</h2>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; width:100%; max-width:450px;">
-            <button class="court-btn" id="court-btn-1" onclick="selectCourt('1')">場地 1</button>
-            <button class="court-btn" id="court-btn-2" onclick="selectCourt('2')">場地 2</button>
-            <button class="court-btn" id="court-btn-3" onclick="selectCourt('3')">場地 3</button>
-            <button class="court-btn" id="court-btn-4" onclick="selectCourt('4')">場地 4</button>
-            <button class="court-btn" id="court-btn-5" onclick="selectCourt('5')">場地 5</button>
-            <button class="court-btn" id="court-btn-6" onclick="selectCourt('6')">場地 6</button>
+        <p id="current-judge-display" style="color: var(--primary); font-weight: bold;"></p>
+        <h2>場地分配</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 450px;">
+            <button class="btn btn-gray" style="height: 100px; margin:0;" id="court-btn-1" onclick="selectCourt('1')">場地 1</button>
+            <button class="btn btn-gray" style="height: 100px; margin:0;" id="court-btn-2" onclick="selectCourt('2')">場地 2</button>
+            <button class="btn btn-gray" style="height: 100px; margin:0;" id="court-btn-3" onclick="selectCourt('3')">場地 3</button>
+            <button class="btn btn-gray" style="height: 100px; margin:0;" id="court-btn-4" onclick="selectCourt('4')">場地 4</button>
+            <button class="btn btn-gray" style="height: 100px; margin:0;" id="court-btn-5" onclick="selectCourt('5')">場地 5</button>
+            <button class="btn btn-gray" style="height: 100px; margin:0;" id="court-btn-6" onclick="selectCourt('6')">場地 6</button>
         </div>
     </div>
 
     <div id="pre-game-page" class="page">
         <h2 id="setup-court-label">場地設定</h2>
         <div class="admin-box">
-            <label>隊伍 A (左側)</label><input type="text" id="teamA-names" placeholder="選手名稱">
-            <div style="text-align:center; margin:10px 0; font-weight:bold; opacity:0.5;">VS</div>
-            <label>隊伍 B (右側)</label><input type="text" id="teamB-names" placeholder="選手名稱">
-            <button class="btn btn-primary" style="width:100%; margin-top:20px;" onclick="startMatch()">開始比賽</button>
+            <label style="color:var(--primary)">Team A (Left Side)</label>
+            <input type="text" id="teamA-names" placeholder="選手 A1 / A2">
+            <div style="text-align:center; margin: 15px 0; font-weight: bold; color: rgba(255,255,255,0.2);">V.S.</div>
+            <label style="color:var(--secondary)">Team B (Right Side)</label>
+            <input type="text" id="teamB-names" placeholder="選手 B1 / B2">
+            <button class="btn btn-primary" style="width: 100%; margin-top: 30px;" onclick="startMatch()">開始比賽</button>
         </div>
     </div>
 
     <div id="scoring-page" class="page">
-        <div id="current-set-label" style="background:var(--accent); padding:5px 15px; border-radius:15px; font-weight:bold; margin-bottom:10px;">第 1 局</div>
+        <div id="current-set-label" style="color: var(--accent); margin-bottom: 15px; font-weight: 800; letter-spacing: 2px;">SET 1</div>
         <div class="scoreboard">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; justify-content: space-around;">
                 <div style="flex: 1;">
-                    <div id="set-won-A" style="font-weight:bold; color:var(--secondary); font-size:1.2rem;">0</div>
+                    <div id="set-won-A" class="set-score">0</div>
                     <div id="dot-A" class="serving-dot"></div>
                     <div id="score-A" class="score-num" onclick="addScore('A')">0</div>
-                    <div id="display-nameA" style="font-weight:bold; margin-top:10px;">A 隊</div>
+                    <div id="display-nameA" style="font-weight: 700; opacity: 0.8;">TEAM A</div>
                 </div>
-                <div style="width: 40px; font-weight:bold; opacity:0.3;">VS</div>
+                <div style="font-size: 1.5rem; opacity: 0.2;">:</div>
                 <div style="flex: 1;">
-                    <div id="set-won-B" style="font-weight:bold; color:var(--secondary); font-size:1.2rem;">0</div>
+                    <div id="set-won-B" class="set-score">0</div>
                     <div id="dot-B" class="serving-dot"></div>
                     <div id="score-B" class="score-num" onclick="addScore('B')">0</div>
-                    <div id="display-nameB" style="font-weight:bold; margin-top:10px;">B 隊</div>
+                    <div id="display-nameB" style="font-weight: 700; opacity: 0.8;">TEAM B</div>
                 </div>
             </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 500px; margin-top: 20px;">
-            <button class="btn btn-outline" onclick="undo()">↩️ 恢復</button>
-            <button class="btn btn-outline" onclick="switchSide()">🔄 換邊</button>
-            <button class="btn btn-outline" onclick="manualServe()">🏸 發球</button>
-            <button class="btn btn-secondary" onclick="resetMatch()">⚠️ 重設分數</button>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 500px; margin-top: 25px;">
+            <button class="btn btn-gray" onclick="undo()">UNDO 恢復</button>
+            <button class="btn btn-gray" onclick="switchSide()">SWAP 換邊</button>
+            <button class="btn btn-gray" onclick="manualServe()">SERVE 發球</button>
+            <button class="btn btn-secondary" onclick="resetMatch()">RESET 重設</button>
         </div>
-        <button class="btn btn-gray" style="width: 100%; max-width: 500px;" onclick="clearCourtData()">🔚 結束並清空場地</button>
+        <button class="btn btn-gray" style="width: 100%; max-width: 500px; border: 1px solid rgba(255,107,107,0.3);" onclick="clearCourtData()">EXIT 結束本場</button>
     </div>
 
     <div id="player-hub-page" class="page">
-        <h1 style="color:var(--primary);">即時賽況大廳</h1>
-        <div class="admin-box" style="text-align:center; margin-bottom:20px;">
-            <h3 id="announcement-text">歡迎來到羽球賽事系統</h3>
-            <img id="schedule-img-display" src="" style="max-width:100%; border-radius:10px; display:none; margin-top:15px;">
-        </div>
-        <div id="live-scoreboard-grid" style="width: 100%; max-width: 500px;">
-            </div>
+        <h2 style="margin-bottom: 5px;">LIVE SCORE</h2>
+        <p id="announcement-text" style="opacity: 0.5; margin-bottom: 25px;">系統監控中</p>
+        <div class="hub-grid" id="live-scoreboard-grid"></div>
     </div>
 
     <div id="admin-master-page" class="page">
-        <h2>🛠️ 管理後台</h2>
+        <h2>ADMIN CONTROL</h2>
         <div class="admin-box">
-            <h4>1. 視覺與公告</h4>
-            <input type="text" id="admin-home-img-url" placeholder="首頁 Logo 圖片網址">
-            <textarea id="admin-announcement" placeholder="大廳公告內容"></textarea>
-            <input type="text" id="admin-img-url" placeholder="大廳賽程圖網址">
-            <button class="btn btn-primary" style="width:100%;" onclick="publishNotice()">發布設定</button>
-            <hr>
-            <h4>2. 全場分數制度</h4>
+            <input type="text" id="admin-home-img-url" placeholder="Logo URL">
+            <textarea id="admin-announcement" placeholder="Announcement..."></textarea>
+            <button class="btn btn-primary" style="width:100%" onclick="publishNotice()">SAVE SETTINGS</button>
+            <hr style="opacity:0.1; margin: 20px 0;">
             <select id="rule-score-target">
                 <option value="11">11 分制</option>
                 <option value="15">15 分制</option>
                 <option value="21" selected>21 分制</option>
             </select>
-            <button class="btn btn-secondary" style="width:100%;" onclick="updateAllCourtsRule()">套用至所有場地</button>
+            <button class="btn btn-secondary" style="width:100%" onclick="updateAllCourtsRule()">SYNC ALL COURTS</button>
         </div>
     </div>
 
-    <button id="global-back-btn" class="back-fab" onclick="smartBack()">返回</button>
+    <button id="global-back-btn" class="back-fab" onclick="smartBack()">BACK</button>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -208,16 +227,17 @@
     let loggedJudge = "";
     const courtList = ['1', '2', '3', '4', '5', '6'];
 
-    // --- 介面跳轉 ---
+    // --- 導覽邏輯 ---
     window.showPage = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
         document.getElementById(id).classList.add('active-page');
         document.getElementById('global-back-btn').style.display = (id === 'home-page') ? 'none' : 'flex';
-        window.scrollTo(0,0);
+        // 只有在進入計分頁面且有贏家時才顯示彈窗
     };
+
     window.smartBack = () => showPage('home-page');
     window.verifyStaff = () => { if(document.getElementById('staff-pass').value === '1234') showPage('staff-select-page'); else alert('密碼錯誤'); };
-    window.adminLogin = () => { if(prompt("管理密碼") === '9999') showPage('admin-master-page'); };
+    window.adminLogin = () => { if(prompt("ADMIN PASS") === '9999') showPage('admin-master-page'); };
 
     document.getElementById('staff-name-list').onchange = (e) => {
         document.getElementById('staff-name-manual').style.display = (e.target.value === '其他') ? 'block' : 'none';
@@ -227,47 +247,18 @@
         const sel = document.getElementById('staff-name-list').value;
         loggedJudge = (sel === '其他') ? document.getElementById('staff-name-manual').value : sel;
         if(!loggedJudge) return alert("請輸入姓名");
-        document.getElementById('current-judge-display').innerText = `裁判：${loggedJudge}`;
+        document.getElementById('current-judge-display').innerText = `JUDGE: ${loggedJudge}`;
         showPage('court-selection-page');
     };
 
-    // --- 後台管理同步 ---
-    window.publishNotice = async () => {
-        await setDoc(doc(db, "config", "announcement"), { 
-            content: document.getElementById('admin-announcement').value, 
-            homeImg: document.getElementById('admin-home-img-url').value,
-            imgUrl: document.getElementById('admin-img-url').value 
-        });
-        alert("設定成功");
-    };
-
-    window.updateAllCourtsRule = async () => {
-        const target = parseInt(document.getElementById('rule-score-target').value);
-        if(!confirm(`確定要將 1-6 場地全部改為 ${target} 分制嗎？`)) return;
-        const ps = courtList.map(id => updateDoc(doc(db, "games", id), { targetScore: target }));
-        await Promise.all(ps);
-        alert("全場規則已同步");
-    };
-
-    onSnapshot(doc(db, "config", "announcement"), (snap) => {
-        if(snap.exists()){
-            const d = snap.data();
-            const logo = document.getElementById('home-logo-display');
-            logo.innerHTML = (d.homeImg) ? `<img src="${d.homeImg}" style="max-width:85%; max-height:180px; border-radius:20px; box-shadow:0 8px 20px rgba(0,0,0,0.1);">` : `<span style="font-size: 80px;">🏸</span>`;
-            document.getElementById('announcement-text').innerText = d.content || "羽球賽事系統";
-            const sImg = document.getElementById('schedule-img-display');
-            if(d.imgUrl) { sImg.src = d.imgUrl; sImg.style.display = 'block'; } else sImg.style.display = 'none';
-        }
-    });
-
-    // --- 計分邏輯 (含局數修正) ---
+    // --- 計分邏輯 ---
     window.selectCourt = async (id) => {
         currentCourt = id;
         const snap = await getDoc(doc(db, "games", id));
         if(snap.exists() && snap.data().nameA !== "準備中") {
             showPage('scoring-page');
         } else {
-            document.getElementById('setup-court-label').innerText = `場地 ${id} 設定`;
+            document.getElementById('setup-court-label').innerText = `COURT ${id} SETUP`;
             showPage('pre-game-page');
         }
         listenToCourt(id);
@@ -278,8 +269,8 @@
         const t = snap.exists() ? (snap.data().targetScore || 21) : 21;
         await setDoc(doc(db, "games", currentCourt), { 
             scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, 
-            nameA: document.getElementById('teamA-names').value || "A 隊", 
-            nameB: document.getElementById('teamB-names').value || "B 隊", 
+            nameA: document.getElementById('teamA-names').value || "TEAM A", 
+            nameB: document.getElementById('teamB-names').value || "TEAM B", 
             currentSet: 1, server: 'A', history: [], isWaitingNext: false, 
             targetScore: t, judgeName: loggedJudge 
         });
@@ -290,20 +281,23 @@
         onSnapshot(doc(db, "games", id), (snap) => {
             if (snap.exists() && currentCourt === id) {
                 const d = snap.data();
-                const t = d.targetScore || 21;
                 document.getElementById('score-A').innerText = d.scoreA;
                 document.getElementById('score-B').innerText = d.scoreB;
                 document.getElementById('display-nameA').innerText = d.nameA;
                 document.getElementById('display-nameB').innerText = d.nameB;
                 document.getElementById('set-won-A').innerText = d.setsA || 0;
                 document.getElementById('set-won-B').innerText = d.setsB || 0;
-                document.getElementById('current-set-label').innerText = `第 ${d.currentSet} 局 (${t}分制)`;
+                document.getElementById('current-set-label').innerText = `SET ${d.currentSet} (${d.targetScore || 21} PTS)`;
                 document.getElementById('dot-A').className = d.server === 'A' ? 'serving-dot serving-active' : 'serving-dot';
                 document.getElementById('dot-B').className = d.server === 'B' ? 'serving-dot serving-active' : 'serving-dot';
+                
+                const overlay = document.getElementById('game-over-overlay');
                 if(d.isWaitingNext) {
-                    document.getElementById('winner-text').innerText = `${d.scoreA > d.scoreB ? d.nameA : d.nameB} 拿下本局！`;
+                    document.getElementById('winner-text').innerText = `${d.scoreA > d.scoreB ? d.nameA : d.nameB} WIN!`;
                     document.getElementById('final-score-display').innerText = `${d.scoreA} : ${d.scoreB}`;
-                    document.getElementById('game-over-overlay').style.display = 'flex';
+                    overlay.style.display = 'flex';
+                } else {
+                    overlay.style.display = 'none';
                 }
             }
         });
@@ -329,18 +323,15 @@
             setsB: !winA ? (d.setsB+1) : d.setsB, 
             scoreA: 0, scoreB: 0, currentSet: d.currentSet+1, isWaitingNext: false, history: [] 
         });
-        document.getElementById('game-over-overlay').style.display = 'none';
     };
 
     window.switchSide = async () => {
         const ref = doc(db, "games", currentCourt);
         const d = (await getDoc(ref)).data();
-        // 關鍵：隊伍名稱、局數分數同步對調，確保「人跟著局數走」
         await updateDoc(ref, { 
             nameA: d.nameB, nameB: d.nameA, 
             scoreA: d.scoreB, scoreB: d.scoreA, 
-            setsA: d.setsB, setsB: d.setsA,
-            server: d.server === 'A' ? 'B' : 'A'
+            setsA: d.setsB, setsB: d.setsA, server: d.server==='A'?'B':'A'
         });
     };
 
@@ -350,63 +341,77 @@
         if(d.history && d.history.length > 0) {
             const last = d.history.pop();
             await updateDoc(ref, { ...last, history: d.history, isWaitingNext: false });
-            document.getElementById('game-over-overlay').style.display = 'none';
         }
     };
 
     window.clearCourtData = async () => {
-        if(confirm("確定結束比賽並清空？")) {
+        if(confirm("EXIT AND RESET COURT?")) {
             await setDoc(doc(db, "games", currentCourt), { nameA: "準備中", nameB: "準備中", scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, currentSet: 1, judgeName: "", targetScore: 21 });
             showPage('court-selection-page');
         }
     };
 
     window.manualServe = async () => { const ref = doc(db, "games", currentCourt); const d = (await getDoc(ref)).data(); await updateDoc(ref, { server: d.server==='A'?'B':'A' }); };
-    window.resetMatch = async () => { if(confirm("重設本局比分？")) updateDoc(doc(db, "games", currentCourt), { scoreA: 0, scoreB: 0, history: [], isWaitingNext: false }); };
+    window.resetMatch = async () => { if(confirm("RESET SCORE?")) updateDoc(doc(db, "games", currentCourt), { scoreA: 0, scoreB: 0, history: [], isWaitingNext: false }); };
 
-    // --- [修正] 大廳 6 個場地固定顯示邏輯 ---
+    // --- 大廳初始化 ---
     const hubGrid = document.getElementById('live-scoreboard-grid');
     courtList.forEach(id => {
         const card = document.createElement('div');
         card.id = `hub-card-${id}`;
         card.className = 'hub-card idle';
-        card.innerHTML = `<div>場地 ${id} 閒置中</div>`;
         hubGrid.appendChild(card);
         
         onSnapshot(doc(db, "games", id), (snap) => {
             const d = snap.data();
             const cardEl = document.getElementById(`hub-card-${id}`);
+            const courtBtn = document.getElementById(`court-btn-${id}`);
             if(d && d.nameA !== "準備中") {
-                cardEl.className = 'hub-card active animate__animated animate__fadeIn';
+                cardEl.className = 'hub-card active';
                 cardEl.innerHTML = `
                     <div style="flex:1">
-                        <div style="font-size:0.75rem; color:#888; font-weight:bold;">COURT ${id}</div>
-                        <div style="font-size:1.1rem; font-weight:bold;">${d.nameA} vs ${d.nameB}</div>
-                        <div style="font-size:0.7rem; color:var(--secondary);">裁判: ${d.judgeName || '未知'}</div>
+                        <div style="font-size:0.7rem; color:var(--primary);">COURT ${id}</div>
+                        <div style="font-weight:bold; font-size:1.1rem;">${d.nameA} vs ${d.nameB}</div>
+                        <div style="font-size:0.6rem; opacity:0.5;">JUDGE: ${d.judgeName}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div style="color:var(--secondary); font-weight:900; font-size:0.8rem;">SETS ${d.setsA} : ${d.setsB}</div>
-                        <div style="font-size:1.6rem; font-weight:900; color:var(--primary); line-height:1;">${d.scoreA} : ${d.scoreB}</div>
-                        <div style="font-size:0.65rem; background:#eee; padding:2px 6px; border-radius:4px; margin-top:4px; display:inline-block;">第 ${d.currentSet} 局</div>
+                        <div style="color:var(--accent); font-weight:bold; font-size:0.8rem;">${d.setsA}:${d.setsB}</div>
+                        <div style="font-size:1.8rem; font-weight:900; color:var(--primary);">${d.scoreA}:${d.scoreB}</div>
                     </div>
                 `;
+                if(courtBtn) { courtBtn.style.border = "2px solid var(--primary)"; courtBtn.style.color = "var(--primary)"; }
             } else {
                 cardEl.className = 'hub-card idle';
-                cardEl.innerHTML = `<div style="color:#aaa;">場地 ${id} 閒置中</div>`;
-            }
-
-            // 同步場地選擇按鈕
-            const btn = document.getElementById(`court-btn-${id}`);
-            if(btn) {
-                if(d && d.nameA !== "準備中") {
-                    btn.style.borderColor = "var(--secondary)";
-                    btn.innerHTML = `場地 ${id}<br><span style="font-size:0.7rem; color:var(--secondary);">執法中: ${d.judgeName}</span>`;
-                } else {
-                    btn.style.borderColor = "#eee"; btn.innerHTML = `場地 ${id}`;
-                }
+                cardEl.innerHTML = `<div style="opacity:0.3">COURT ${id} - IDLE</div>`;
+                if(courtBtn) { courtBtn.style.border = "none"; courtBtn.style.color = "white"; }
             }
         });
     });
+
+    // --- 後台管理功能 ---
+    window.publishNotice = async () => {
+        await setDoc(doc(db, "config", "announcement"), { 
+            content: document.getElementById('admin-announcement').value, 
+            homeImg: document.getElementById('admin-home-img-url').value 
+        });
+        alert("UPDATED");
+    };
+
+    window.updateAllCourtsRule = async () => {
+        const target = parseInt(document.getElementById('rule-score-target').value);
+        const ps = courtList.map(id => updateDoc(doc(db, "games", id), { targetScore: target }));
+        await Promise.all(ps);
+        alert("SYNCED");
+    };
+
+    onSnapshot(doc(db, "config", "announcement"), (snap) => {
+        if(snap.exists()){
+            const d = snap.data();
+            if(d.homeImg) document.getElementById('home-logo-display').innerHTML = `<img src="${d.homeImg}" style="max-width:150px; border-radius:20px;">`;
+            document.getElementById('announcement-text').innerText = d.content || "SYSTEM MONITORING";
+        }
+    });
+
 </script>
 </body>
 </html>
