@@ -190,32 +190,25 @@
     let loggedJudge = "";
     const courts = ['1', '2', '3', '4', '5', '6'];
 
-    // --- 裁判登錄修正 ---
+    // --- 裁判登錄 ---
     window.confirmStaff = () => {
         const selectBox = document.getElementById('staff-name-list');
         const manualInput = document.getElementById('staff-name-manual');
-        
-        if (selectBox.value === '其他') {
-            loggedJudge = manualInput.value.trim();
-        } else {
-            loggedJudge = selectBox.value;
-        }
+        loggedJudge = (selectBox.value === '其他') ? manualInput.value.trim() : selectBox.value;
 
         if(!loggedJudge) {
             alert("請選擇或輸入您的姓名");
             return;
         }
-
         document.getElementById('current-judge-tag').innerText = `目前裁判：${loggedJudge}`;
         showPage('court-selection-page');
     };
 
-    // 監聽下拉選單顯示手動輸入框
     document.getElementById('staff-name-list').addEventListener('change', (e) => {
         document.getElementById('manual-name-group').style.display = (e.target.value === '其他') ? 'block' : 'none';
     });
 
-    // --- 大廳初始化與監聽 ---
+    // --- 大廳初始化 (這段是關鍵) ---
     const gridEl = document.getElementById('live-scoreboard-grid');
     gridEl.innerHTML = courts.map(id => `
         <div id="hub-court-${id}" style="background: white; border-radius: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #ddd;">
@@ -231,36 +224,50 @@
         </div>
     `).join('');
     
-    // --- 監聽場地選擇按鈕狀態 ---
+    // --- 核心同步監聽 (大廳與按鈕狀態) ---
     courts.forEach(id => {
         onSnapshot(doc(db, "games", id), (snap) => {
-            const btn = document.querySelector(`button[onclick="selectCourt('${id}')"]`);
-            if (snap.exists() && btn) {
+            if (snap.exists()) {
                 const d = snap.data();
-                // 如果有名稱且不是「準備中」，或者是已經有裁判名，就顯示執法中
-                if (d.judgeName && d.judgeName !== "" && d.nameA !== "準備中") {
-                    btn.style.borderColor = "var(--secondary)";
-                    btn.innerHTML = `場地 ${id}<br><span style="font-size:0.7rem; color:var(--secondary);">執法中: ${d.judgeName}</span>`;
-                    btn.dataset.inUse = "true";
-                    btn.dataset.activeJudge = d.judgeName;
-                } else {
-                    btn.style.borderColor = "#eee";
-                    btn.innerHTML = `場地 ${id}`;
-                    btn.dataset.inUse = "false";
+                
+                // 1. 更新大廳內容 (HUB)
+                const target = d.targetScore || 21;
+                const sA = d.scoreA || 0, sB = d.scoreB || 0;
+                document.getElementById(`hub-names-${id}`).innerText = `${d.nameA} vs ${d.nameB}`;
+                document.getElementById(`hub-set-${id}`).innerText = `Set ${d.currentSet || 1}`;
+                document.getElementById(`hub-sets-score-${id}`).innerText = `Sets: ${d.setsA || 0} : ${d.setsB || 0}`;
+                const hubScoreEl = document.getElementById(`hub-score-${id}`);
+                hubScoreEl.innerText = `${sA} : ${sB}`;
+                
+                // 如果是局點變色
+                const isGP = (sA >= target - 1 || sB >= target - 1) && (sA !== sB);
+                hubScoreEl.style.color = isGP ? "var(--secondary)" : "var(--primary)";
+                document.getElementById(`hub-court-${id}`).style.borderColor = (d.nameA === "準備中") ? "#ddd" : "var(--primary)";
+
+                // 2. 更新裁判頁面的「場地按鈕」狀態
+                const btn = document.querySelector(`button[onclick="selectCourt('${id}')"]`);
+                if (btn) {
+                    if (d.judgeName && d.judgeName !== "" && d.nameA !== "準備中") {
+                        btn.style.borderColor = "var(--secondary)";
+                        btn.innerHTML = `場地 ${id}<br><span style="font-size:0.7rem; color:var(--secondary);">執法中: ${d.judgeName}</span>`;
+                        btn.dataset.inUse = "true";
+                        btn.dataset.activeJudge = d.judgeName;
+                    } else {
+                        btn.style.borderColor = "#eee";
+                        btn.innerHTML = `場地 ${id}`;
+                        btn.dataset.inUse = "false";
+                    }
                 }
             }
         });
     });
 
-    // --- 核心邏輯與 UI 更新 ---
+    // --- 裁判計分頁面 UI 更新 ---
     function updateUI(data) {
         if (!data) return;
         const sA = data.scoreA || 0, sB = data.scoreB || 0, target = data.targetScore || 21;
-        const elA = document.getElementById('score-A');
-        const elB = document.getElementById('score-B');
-        elA.innerText = sA; elB.innerText = sB;
-        elA.style.color = (sA >= target - 1 && sA > sB) ? "var(--secondary)" : "var(--text-main)";
-        elB.style.color = (sB >= target - 1 && sB > sA) ? "var(--secondary)" : "var(--text-main)";
+        document.getElementById('score-A').innerText = sA;
+        document.getElementById('score-B').innerText = sB;
         document.getElementById('display-nameA').innerText = data.nameA || "A 隊";
         document.getElementById('display-nameB').innerText = data.nameB || "B 隊";
         document.getElementById('set-won-A').innerText = `Sets: ${data.setsA || 0}`;
@@ -276,18 +283,12 @@
     window.selectCourt = async (id) => { 
         const btn = document.querySelector(`button[onclick="selectCourt('${id}')"]`);
         if (btn && btn.dataset.inUse === "true") {
-            if (!confirm(`警告：該場地目前正由 ${btn.dataset.activeJudge} 執法中！\n進入後可能會干擾對方的計分。確定要進入嗎？`)) {
-                return;
-            }
+            if (!confirm(`警告：該場地目前正由 ${btn.dataset.activeJudge} 執法中！\n進入後可能會干擾對方的計分。確定要進入嗎？`)) return;
         }
-        
         currentCourt = id; 
-        document.getElementById('current-rule-display').innerText = "...";
         showPage('pre-game-page'); 
         const snap = await getDoc(doc(db, "games", id));
-        if(snap.exists()) {
-            document.getElementById('current-rule-display').innerText = `${snap.data().targetScore || 21} 分制`;
-        }
+        if(snap.exists()) document.getElementById('current-rule-display').innerText = `${snap.data().targetScore || 21} 分制`;
         listenToCourt(id);
     };
 
@@ -303,14 +304,12 @@
         });
     }
 
+    // --- 管理功能 ---
     window.updateAllCourtsRule = async () => {
         const target = parseInt(document.getElementById('rule-score-target').value);
         if(confirm(`確定要將所有場地 (1-6) 統一更改為 ${target} 分制嗎？`)) {
             const batch = writeBatch(db);
-            courts.forEach(id => {
-                const ref = doc(db, "games", id);
-                batch.update(ref, { targetScore: target });
-            });
+            courts.forEach(id => { batch.update(doc(db, "games", id), { targetScore: target }); });
             await batch.commit();
             alert("全場地賽制已同步更新！");
         }
@@ -343,8 +342,8 @@
         const d = (await getDoc(docRef)).data();
         if(d.nameA === "準備中") return;
         const target = d.targetScore || 21;
-        let nA = team === 'A' ? d.scoreA + 1 : d.scoreA;
-        let nB = team === 'B' ? d.scoreB + 1 : d.scoreB;
+        let nA = (team === 'A') ? d.scoreA + 1 : d.scoreA;
+        let nB = (team === 'B') ? d.scoreB + 1 : d.scoreB;
         const win = (nA >= target && nA-nB >= 2) || (nB >= target && nB-nA >= 2) || nA === target+9 || nB === target+9;
         const hist = d.history || []; hist.push({scoreA: d.scoreA, scoreB: d.scoreB, server: d.server});
         await updateDoc(docRef, { scoreA: nA, scoreB: nB, server: team, history: hist.slice(-10), isWaitingNext: win });
@@ -368,6 +367,7 @@
         document.getElementById('game-over-overlay').style.display = 'none';
     };
 
+    // --- 頁面控制與公告 ---
     window.showPage = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
         document.getElementById(id).classList.add('active-page');
@@ -376,6 +376,7 @@
     window.smartBack = () => showPage('home-page');
     window.verifyStaff = () => { if(document.getElementById('staff-pass').value==='1234') showPage('staff-select-page'); else alert('密碼錯誤'); };
     window.adminLogin = () => { if(prompt("管理員密碼")==='9999') showPage('admin-master-page'); };
+    
     window.publishNotice = async () => {
         await setDoc(doc(db, "config", "announcement"), { content: document.getElementById('admin-announcement').value, imgUrl: document.getElementById('admin-img-url').value });
         alert("公告已更新");
@@ -414,4 +415,3 @@
 </script>
 </body>
 </html>
-
