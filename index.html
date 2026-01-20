@@ -303,6 +303,7 @@
                 
                 sA.innerText = d.scoreA;
                 sB.innerText = d.scoreB;
+
                 // 判斷 Game Point (局點) - 分數變紅
                 const isGamePointA = (d.scoreA >= target - 1 && d.scoreA > d.scoreB);
                 const isGamePointB = (d.scoreB >= target - 1 && d.scoreB > d.scoreA);
@@ -314,14 +315,6 @@
                 label.innerText = isDeuce ? `DEUCE (第 ${d.currentSet} 局)` : `第 ${d.currentSet} 局 (${target}分制)`;
                 label.style.background = isDeuce ? 'var(--secondary)' : 'var(--accent)';
                 label.style.color = isDeuce ? 'white' : 'var(--text-main)';
-                
-                document.getElementById('score-A').innerText = d.scoreA;
-                document.getElementById('score-B').innerText = d.scoreB;
-                document.getElementById('display-nameA').innerText = d.nameA;
-                document.getElementById('display-nameB').innerText = d.nameB;
-                document.getElementById('set-won-A').innerText = `Sets: ${d.setsA || 0}`;
-                document.getElementById('set-won-B').innerText = `Sets: ${d.setsB || 0}`;
-                document.getElementById('current-set-label').innerText = `第 ${d.currentSet} 局 (${target}分制)`;
                 
                 // 呼吸燈與發球權
                 document.getElementById('dot-A').className = d.server === 'A' ? 'serving-dot serving-active' : 'serving-dot';
@@ -400,15 +393,6 @@
         document.getElementById('game-over-overlay').style.display = 'none';
     };
 
-    window.undo = async () => {
-        const ref = doc(db, "games", currentCourt);
-        const d = (await getDoc(ref)).data();
-        if(d.history && d.history.length > 0) {
-            const last = d.history.pop();
-            await updateDoc(ref, { ...last, history: d.history, isWaitingNext: false });
-            document.getElementById('game-over-overlay').style.display = 'none';
-        }
-    };
 
     window.clearCourtData = async () => {
         if(confirm("確定清空場地？將重設所有比分與裁判名。")) {
