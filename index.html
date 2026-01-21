@@ -349,13 +349,11 @@
         messagingSenderId: "83500315105",
         appId: "1:83500315105:web:852112812e448efbb6e2a0"
     };
-    
-    // 初始化 Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
+    // 初始化 Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
     let currentCourt = null;
     let loggedJudge = "";
     const courtList = ['1', '2', '3', '4', '5', '6'];
@@ -371,7 +369,10 @@
     window.smartBack = () => showPage('home-page');
 
     // --- 裁判登入 ---
-    window.verifyStaff = () => { if(document.getElementById('staff-pass').value === '0000') showPage('staff-select-page'); else alert('密碼錯誤'); };
+    window.verifyStaff = () => { 
+        if(document.getElementById('staff-pass').value === '0000') showPage('staff-select-page'); 
+        else alert('密碼錯誤'); 
+    };
     
     document.getElementById('staff-name-list').onchange = (e) => {
         document.getElementById('staff-name-manual').style.display = (e.target.value === '其他') ? 'block' : 'none';
