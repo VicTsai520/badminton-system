@@ -244,9 +244,7 @@
 
     <div id="pre-game-page" class="page">
         <h2 style="text-align: center; color: var(--primary); margin-bottom: 25px;">場地設定</h2>
-
         <h2 id="pre-game-title" style="text-align: center; color: var(--primary); margin-bottom: 25px;">場地設定</h2>
-        
         <div class="admin-box">
             <label>隊伍 A</label><input type="text" id="teamA-names" placeholder="選手名稱">
             <div style="text-align:center; margin:10px 0; font-weight:bold; opacity:0.5;">VS</div>
@@ -535,11 +533,7 @@
             // 取得設定的總局數
             const configSnap = await getDoc(doc(db, "config", "match_settings"));
             const globalSets = configSnap.exists() ? configSnap.data().defaultTotalSets : 3;
-            // 4. 更新標題 (場地 X 設定...)
-            const titleEl = document.getElementById('pre-game-title');
-            if(titleEl) {
-                titleEl.innerText = `場地 ${currentCourt} 設定 (${globalSets} 局定勝負, ${targetScoreValue} 分制)`;
-            } 
+            
             // 5. 寫入 Firebase
             await setDoc(doc(db, "games", currentCourt), {
                 scoreA: 0, scoreB: 0, 
@@ -556,7 +550,6 @@
 
             // 成功寫入後才跳轉頁面
             showPage('scoring-page');
-
         } catch (error) {
             console.error("啟動比賽失敗:", error);
             alert("無法啟動比賽，請檢查網路或資料庫權限");
@@ -709,6 +702,7 @@
             showPage('court-selection-page');
         }
     };
+
     window.confirmNextSet = async () => {
         const ref = doc(db, "games", currentCourt);
         const snap = await getDoc(ref);
@@ -747,6 +741,7 @@
         // 隱藏獲勝燈箱
         document.getElementById('game-over-overlay').style.display = 'none';
     };
+
 
 
     window.clearCourtData = async (auto = false) => {
