@@ -511,17 +511,15 @@
         // 1. 取得 DOM 元素
         const inputA = document.getElementById('playerA-name');
         const inputB = document.getElementById('playerB-name');
-        const targetScoreValue = parseInt(document.getElementById('target-score-select').value) || 11;
-       
+        const targetSelect = document.getElementById('target-score-select');
+
         // 2. 取得數值 (只在這邊宣告一次 targetScoreValue)
         const nA = (inputA && inputA.value) ? inputA.value : "A 隊";
         const nB = (inputB && inputB.value) ? inputB.value : "B 隊";
         const targetScoreValue = targetSelect ? parseInt(targetSelect.value) : 11;
-        // 取得設定的總局數
-        const totalSetsValue = parseInt(document.getElementById('match-sets-select').value) || 3;
-
+        
         try {
-        // 寫入 Firebase
+            // 取得設定的總局數
             const configSnap = await getDoc(doc(db, "config", "match_settings"));
             const globalSets = configSnap.exists() ? configSnap.data().defaultTotalSets : 3; 
 
@@ -696,8 +694,6 @@
     window.confirmNextSet = async () => {
         const ref = doc(db, "games", currentCourt);
         const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-        
         const d = snap.data();
         
         // 1. 判定這一局誰贏了，並計算新的局數比分
@@ -711,12 +707,11 @@
 
         // 2. 取得設定的總局數 (預設為 3)，並計算贏球門檻
         // 1 局制門檻是 1 勝；3 局制門檻是 2 勝
-        const totalSets = d.totalSets || 3;
-        const winThreshold = Math.ceil(totalSets / 2);
+        const winThreshold = Math.ceil((td.totalSets || 3) / 2);
 
         // 3. 判斷是否已經達成勝局門檻 (比賽最終結束)
         if (newSetsA >= winThreshold || newSetsB >= winThreshold) {
-            alert(`比賽結束！最終比數 ${newSetsA}:${newSetsB}`);
+            alert(`比賽結束！恭喜 ${newSetsA >= winThreshold ? d.nameA : d.nameB} 獲勝！`);
             
             // 比賽結束，直接執行清空場地的動作
             await window.clearCourtData(true); // 傳入 true 代表不需再次彈出 confirm
