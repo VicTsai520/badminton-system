@@ -490,17 +490,34 @@
     window.startMatch = async () => {
         const teamA = document.getElementById('teamA-names').value || "A 隊";
         const teamB = document.getElementById('teamB-names').value || "B 隊";
-        const targetScoreValue = parseInt(document.getElementById('target-score-select').value); // 獲取選單的分數
+        const targetScoreValue = document.getElementById('target-score-select'); // 獲取選單的分數
+        
+        const nA = (inputA && inputA.value) ? inputA.value : "A 隊";
+        const nB = (inputB && inputB.value) ? inputB.value : "B 隊";
+        const targetScoreValue = targetSelect ? parseInt(targetSelect.value) : 11;
+
         try {
-            await setDoc(doc(db, "games", currentCourt), { 
-                scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, 
-                nameA: teamA, nameB: teamB, 
-                currentSet: 1, server: 'A', history: [], isWaitingNext: false, 
-                targetScore: targetScoreValue, // 確保這行有把選單值存進去
+        // 寫入 Firebase
+            await setDoc(doc(db, "games", currentCourt), {
+                scoreA: 0,
+                scoreB: 0,
+                setsA: 0,
+                setsB: 0,
+                nameA: nA,
+                nameB: nB,
+                currentSet: 1,
+                server: 'A',
+                history: [],
+                isWaitingNext: false,
+                targetScore: targetScoreValue,
+                judgeName: loggedJudge
             });
+
+            // 成功寫入後才跳轉頁面
             showPage('scoring-page');
-        } catch (e) {
-            alert("寫入失敗");
+        } catch (error) {
+            console.error("啟動比賽失敗:", error);
+            alert("無法啟動比賽，請檢查網路或資料庫權限");
         }
     };
     // --- 修改監聽邏輯以加入局點變紅與 Deuce 提醒 (問題3) ---
