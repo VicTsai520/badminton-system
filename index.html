@@ -73,7 +73,11 @@
         }
 
         /* 彈窗 */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); display: none; justify-content: center; align-items: center; z-index: 1000; color: white; text-align: center; backdrop-filter: blur(5px); }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                  background: rgba(0,0,0,0.92); display: none; justify-content: center;
+                  align-items: center; z-index: 1000; color: white; text-align: center;
+                  backdrop-filter: blur(5px); }
+        
         .admin-box { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 25px; margin-top: 15px; box-sizing: border-box; color: var(--text-main); text-align: left; }
         
         input, select, textarea { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #f0f0f0; box-sizing: border-box; font-size: 1rem; margin-top: 8px; }
@@ -103,17 +107,18 @@
 
     <div id="staff-verify-page" class="page">
         <h2>工作人員登入</h2>
-        <input type="password" id="staff-pass" placeholder="輸入裁判密碼 (1234)" style="max-width:300px;">
+        <input type="password" id="staff-pass" placeholder="請輸入工作人員密碼 (0000)" style="max-width:300px;">
         <button class="btn btn-primary" onclick="verifyStaff()">下一步</button>
     </div>
 
     <div id="staff-select-page" class="page">
-        <h2>執法裁判登記</h2>
+        <h2>裁判登記</h2>
         <div class="admin-box">
             <select id="staff-name-list">
                 <option value="">-- 請選擇您的姓名 --</option>
                 <option value="Vic">Vic</option>
-                <option value="Howard">Howard</option>
+                <option value="Howard">Howard</option> 
+                <option value="Howard">Howard</option>543`    
                 <option value="其他">手動輸入...</option>
             </select>
             <input type="text" id="staff-name-manual" placeholder="請在此輸入您的姓名" style="display:none; margin-top:10px;">
@@ -123,7 +128,7 @@
 
     <div id="court-selection-page" class="page">
         <div id="current-judge-display" style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">裁判：未登錄</div>
-        <h2 style="margin-bottom: 20px;">選擇執法場地</h2>
+        <h2 style="margin-bottom: 20px;">選擇計分場地</h2>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; width:100%; max-width:450px;">
             <button class="court-btn" id="court-btn-1" onclick="selectCourt('1')">場地 1</button>
             <button class="court-btn" id="court-btn-2" onclick="selectCourt('2')">場地 2</button>
@@ -171,8 +176,8 @@
     </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 500px; margin-top: 20px;">
             <button class="btn btn-outline" onclick="undo()">↩️ 恢復</button>
-            <button class="btn btn-outline" onclick="switchSide()">🔄 換邊</button>
-            <button class="btn btn-outline" onclick="manualServe()">🏸 發球</button>
+            <button class="btn btn-outline" onclick="switchSide()">🔄 換場</button>
+            <button class="btn btn-outline" onclick="manualServe()">🏸 發球權變更</button>
             <button class="btn btn-secondary" onclick="resetMatch()">⚠️ 重設</button>
         </div>
         <button class="btn btn-gray" style="width: 100%; max-width: 500px;" onclick="clearCourtData()">🔚 結束並清空場地</button>
@@ -198,9 +203,11 @@
             <hr>
             <h4>2. 全場分數規則</h4>
             <select id="rule-score-target">
-                <option value="11">11 分制</option>
+                <option value="11" selected>11 分制</option>
                 <option value="15">15 分制</option>
-                <option value="21" selected>21 分制</option>
+                <option value="21">21 分制</option>
+                <option value="25">25 分制</option>
+                <option value="31">31 分制</option>
             </select>
             <button class="btn btn-secondary" style="width:100%;" onclick="updateAllCourtsRule()">套用全場</button>
         </div>
@@ -238,7 +245,7 @@
     window.smartBack = () => showPage('home-page');
 
     // --- 裁判登入 ---
-    window.verifyStaff = () => { if(document.getElementById('staff-pass').value === '1234') showPage('staff-select-page'); else alert('密碼錯誤'); };
+    window.verifyStaff = () => { if(document.getElementById('staff-pass').value === '0000') showPage('staff-select-page'); else alert('密碼錯誤'); };
     
     document.getElementById('staff-name-list').onchange = (e) => {
         document.getElementById('staff-name-manual').style.display = (e.target.value === '其他') ? 'block' : 'none';
@@ -303,7 +310,7 @@
 
     window.startMatch = async () => {
         const snap = await getDoc(doc(db, "games", currentCourt));
-        const t = snap.exists() ? (snap.data().targetScore || 21) : 21;
+        const t = snap.exists() ? (snap.data().targetScore || 11) : 11;
         await setDoc(doc(db, "games", currentCourt), { 
             scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, 
             nameA: document.getElementById('teamA-names').value || "A 隊", 
@@ -318,7 +325,7 @@
         onSnapshot(doc(db, "games", id), (snap) => {
             if (snap.exists() && currentCourt === id) {
                 const d = snap.data();
-                const target = d.targetScore || 21;
+                const target = d.targetScore || 11;
 
                 const sA = document.getElementById('score-A');
                 const sB = document.getElementById('score-B');
@@ -370,7 +377,7 @@
     window.addScore = async (team) => {
         const ref = doc(db, "games", currentCourt);
         const d = (await getDoc(ref)).data();
-        const t = d.targetScore || 21;
+        const t = d.targetScore || 11;
         let nA = (team === 'A') ? d.scoreA + 1 : d.scoreA;
         let nB = (team === 'B') ? d.scoreB + 1 : d.scoreB;
         // 勝利判定
@@ -400,7 +407,7 @@
         if(confirm("確定清空場地？將重設所有比分與裁判名。")) {
             const ref = doc(db, "games", currentCourt);
             const d = (await getDoc(ref)).data();
-            const currentTarget = d.targetScore || 21; // 記住目前的分制
+            const currentTarget = d.targetScore || 11; // 記住目前的分制
             
             await setDoc(ref, { 
                 nameA: "準備中", 
@@ -436,7 +443,7 @@
         if(confirm("確定清空場地？將重設所有比分與裁判名。")) {
             const ref = doc(db, "games", currentCourt);
             const d = (await getDoc(ref)).data();
-            const currentTarget = d.targetScore || 21; // 記住目前的分制
+            const currentTarget = d.targetScore || 11; // 記住目前的分制
             
             await setDoc(ref, { 
                 nameA: "準備中", 
@@ -479,7 +486,7 @@
             if(snap.exists()){
                 const d = snap.data();
                 const isReady = (d.nameA === "準備中");
-                const target = d.targetScore || 21;
+                const target = d.targetScore || 11;
 
                 // 1. 判斷是否接近結束 (任一方達到局點減 1 時變紅)
                 // 例如 11 分制，10 分就變紅；21 分制，20 分就變紅
@@ -538,3 +545,4 @@
 </script>
 </body>
 </html>
+
