@@ -243,7 +243,10 @@
     </div>
 
     <div id="pre-game-page" class="page">
-        <h2 id="setup-court-label">場地設定</h2>
+        <h2 style="text-align: center; color: var(--primary); margin-bottom: 25px;">場地設定</h2>
+
+        <h2 id="pre-game-title" style="text-align: center; color: var(--primary); margin-bottom: 25px;">場地設定</h2>
+        
         <div class="admin-box">
             <label>隊伍 A</label><input type="text" id="teamA-names" placeholder="選手名稱">
             <div style="text-align:center; margin:10px 0; font-weight:bold; opacity:0.5;">VS</div>
@@ -322,9 +325,11 @@
             <textarea id="admin-announcement" placeholder="變更公告內容"></textarea>
             <input type="text" id="admin-img-url" placeholder="變更大廳賽程圖網址">
             <button class="btn btn-primary" style="width:100%;" onclick="publishNotice()">儲存並發布</button>
+            
             <hr>
+
             <h4>2. 全場分數規則</h4>
-            <select id="rule-score-target">
+            <select id="rule-score-target" style="width:100%; margin-bottom:10px;">
                 <option value="11" selected>11 分制</option>
                 <option value="15">15 分制</option>
                 <option value="21">21 分制</option>
@@ -497,6 +502,23 @@
             alert("資料庫連線失敗，請檢查權限");
         }
     };
+
+    // 專門更新標題文字的函式
+    window.updatePreGameTitle = async () => {
+        // 1. 抓後台設定的局數
+        const configSnap = await getDoc(doc(db, "config", "match_settings"));
+        const globalSets = configSnap.exists() ? configSnap.data().defaultTotalSets : 3;
+        
+        // 2. 抓當前選單選中的分數
+        const currentScore = document.getElementById('target-score-select').value;
+        
+        // 3. 更新標題內容
+        const titleEl = document.getElementById('pre-game-title');
+        if(titleEl) {
+            titleEl.innerText = `場地 ${currentCourt} 設定 (${globalSets} 局定勝負, ${currentScore} 分制)`;
+        }
+    };
+    
     // --- 開始比賽  ---
     window.startMatch = async () => {
         // 1. 取得 DOM 元素
