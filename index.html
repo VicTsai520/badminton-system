@@ -564,13 +564,15 @@
         const d = snap.data();
         const t = d.targetScore || 11;
         
-        // 1. 準備當前的分數作為歷史紀錄
+        // 1. 取得現有紀錄 (若無則建立空陣列)
         const h = d.history || [];
-        const newStateForHistory = {
+        
+        // 2. 存入當前狀態 
+        h.push({
             scoreA: d.scoreA,
             scoreB: d.scoreB,
             server: d.server
-        };
+        });
 
         // 將舊紀錄推入陣列，並只保留最後 10 筆以免資料過大
         currentHistory.push(newStateForHistory);
@@ -600,7 +602,7 @@
             alert("已重設比分");
         }
     };
-    // --- 恢復功能 (Undo) ---
+
     // --- 恢復功能 (Undo) ---
     window.undo = async () => {
         const ref = doc(db, "games", currentCourt);
