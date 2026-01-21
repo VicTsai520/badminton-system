@@ -553,40 +553,33 @@
 
     // --- 開始比賽  ---
     window.startMatch = async () => {
-        // 1. 取得 DOM 元素
+        // 1. 抓取元素
         const elA = document.getElementById('playerA-name');
         const elB = document.getElementById('playerB-name');
         const elTarget = document.getElementById('target-score-select');
 
-        // 2. 取得數值 (只宣告一次，解決紅底問題)
+        // 2. 取得數值 (確保 const 只出現在這一次)
         const nA = (elA && elA.value) ? elA.value : "A 隊";
         const nB = (elB && elB.value) ? elB.value : "B 隊";
         const targetScoreValue = elTarget ? parseInt(elTarget.value) : 11;
-        
+
         try {
-            // 取得設定的總局數
             const configSnap = await getDoc(doc(db, "config", "match_settings"));
             const globalSets = configSnap.exists() ? configSnap.data().defaultTotalSets : 3;
-            
-            // 5. 寫入 Firebase
+
             await setDoc(doc(db, "games", currentCourt), {
-                scoreA: 0, scoreB: 0, 
-                setsA: 0, setsB: 0,
+                scoreA: 0, scoreB: 0, setsA: 0, setsB: 0,
                 nameA: nA, nameB: nB, 
                 currentSet: 1, 
-                totalSets: globalSets, // 使用後台設定的局數
-                server: 'A',
-                history: [], 
-                isWaitingNext: false, 
+                totalSets: globalSets, 
+                server: 'A', history: [], isWaitingNext: false, 
                 targetScore: targetScoreValue, 
                 judgeName: loggedJudge
             });
-
-            // 成功寫入後才跳轉頁面
             showPage('scoring-page');
         } catch (error) {
-            console.error("啟動比賽失敗:", error);
-            alert("無法啟動比賽，請檢查網路或資料庫權限");
+            console.error(error);
+            alert("資料庫寫入失敗，請確認 Firebase Rules 已設為 true");
         }
     };
     // --- 修改監聽邏輯以加入局點變紅與 Deuce 提醒 (問題3) ---
