@@ -192,6 +192,12 @@
         <div id="live-scoreboard-grid" style="width: 100%; max-width: 500px;"></div>
     </div>
 
+    <!-- 全螢幕圖片彈窗 -->
+    <div id="image-viewer" class="overlay" onclick="closeImageViewer()">
+        <span style="position:absolute; top:20px; right:20px; font-size:30px; cursor:pointer;">✕</span>
+        <img id="full-size-image" src="" style="max-width:95%; max-height:95%; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5);">
+    </div>
+
     <div id="admin-master-page" class="page">
         <h2>🛠️ 管理後台</h2>
         <div class="admin-box">
@@ -285,7 +291,7 @@
             await updateDoc(doc(db, "config", "announcement"), updateData);
             alert("更新成功！未填寫部分已維持原樣。");
             
-            // 更新後清空輸入框，方便下次使用
+            // 更新後清空輸入框，便下次使用
             document.getElementById('admin-home-img-url').value = "";
             document.getElementById('admin-announcement').value = "";
             document.getElementById('admin-img-url').value = "";
@@ -311,9 +317,26 @@
             logo.innerHTML = (d.homeImg) ? `<img src="${d.homeImg}" style="max-width:85%; max-height:180px; border-radius:20px; box-shadow:0 8px 20px rgba(0,0,0,0.1);">` : `<span style="font-size: 80px;">🏸</span>`;
             document.getElementById('announcement-text').innerText = d.content || "歡迎參加比賽";
             const sImg = document.getElementById('schedule-img-display');
-            if(d.imgUrl) { sImg.src = d.imgUrl; sImg.style.display = 'block'; } else sImg.style.display = 'none';
+            if(d.imgUrl) { 
+            sImg.src = d.imgUrl; 
+            sImg.style.display = 'block';
+            sImg.style.cursor = 'zoom-in'; // 提示使用者可以點擊
+            // 點擊時打開放大器
+            sImg.onclick = () => openImageViewer(d.imgUrl);
+            } else {
+                sImg.style.display = 'none';
+            }
         }
     });
+    // 控制放大器的函式
+    window.openImageViewer = (url) => {
+        document.getElementById('full-size-image').src = url;
+        document.getElementById('image-viewer').style.display = 'flex';
+    };
+
+    window.closeImageViewer = () => {
+        document.getElementById('image-viewer').style.display = 'none';
+    };
 
     // --- 計分核心（含重入邏輯） ---
     window.selectCourt = async (id) => {
