@@ -342,16 +342,17 @@
             </select>
             <button class="btn btn-secondary" style="width:100%;" onclick="updateAllCourtsRule()">套用全場</button>
         </div>
-        <div class="admin-card">
-            <h3>全域比賽設定</h3>
-            <div class="input-group">
-                <label>統一比賽局數 (1或3局)</label>
-                <select id="admin-global-sets" class="btn" style="background: #f0f0f0; width: 100%;">
-                    <option value="1">一局定勝負</option>
-                    <option value="3" selected>三戰兩勝</option>
+        <div class="admin-card animate__animated animate__fadeIn">
+            <h3><i class="fas fa-cog"></i> 全域比賽設定</h3>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: bold;">統一比賽局數</label>
+                <select id="admin-global-sets" class="btn" style="background: white; color: var(--text-main); width: 100%; border: 1px solid #ddd;">
+                    <option value="1">一局定勝負 (1 局制)</option>
+                    <option value="3" selected>三戰兩勝 (3 局制)</option>
                 </select>
+                <p style="font-size: 0.8rem; color: #666; margin-top: 8px;">※ 儲存後，後續新開始的比賽將自動套用此設定。</p>
             </div>
-            <button class="btn" onclick="saveGlobalSettings()" style="background: var(--primary); color: white; width: 100%; margin-top: 10px;">儲存全域設定</button>
+            <button class="btn" onclick="saveGlobalSettings()" style="background: var(--primary); color: white; width: 100%;">儲存全域設定</button>
         </div>
     </div>
 
@@ -705,10 +706,10 @@
             newSetsB++;
         }
 
-        // 2. 取得設定的總局數 (預設為 3)，並計算贏球門檻
-        // 1 局制門檻是 1 勝；3 局制門檻是 2 勝
-        const winThreshold = Math.ceil((td.totalSets || 3) / 2);
-
+        // 取得該場地啟動時帶入的總局數設定
+        const totalSets = d.totalSets || 3;
+        const winThreshold = Math.ceil(totalSets / 2); // 1局需1勝, 3局需2勝
+        
         // 3. 判斷是否已經達成勝局門檻 (比賽最終結束)
         if (newSetsA >= winThreshold || newSetsB >= winThreshold) {
             alert(`比賽結束！恭喜 ${newSetsA >= winThreshold ? d.nameA : d.nameB} 獲勝！`);
@@ -773,12 +774,14 @@
     window.saveGlobalSettings = async () => {
         const sets = parseInt(document.getElementById('admin-global-sets').value);
         try {
+            // 將設定存入 config 集合中的 match_settings 文件
             await setDoc(doc(db, "config", "match_settings"), {
                 defaultTotalSets: sets
             }, { merge: true });
-            alert("全域設定已更新！");
+            alert("✅ 全域設定已更新！");
         } catch (e) {
-            alert("儲存失敗，請檢查權限");
+            console.error(e);
+            alert("❌ 儲存失敗，請檢查權限");
         }
     };
 
