@@ -558,13 +558,30 @@
 
     window.addScore = async (team) => {
         const ref = doc(db, "games", currentCourt);
-        const d = (await getDoc(ref)).data();
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+
+        const d = snap.data();
         const t = d.targetScore || 11;
+        
+        // 1. 準備當前的分數作為歷史紀錄
+        const h = d.history || [];
+        const newStateForHistory = {
+            scoreA: d.scoreA,
+            scoreB: d.scoreB,
+            server: d.server
+        };
+
+        // 將舊紀錄推入陣列，並只保留最後 10 筆以免資料過大
+        currentHistory.push(newStateForHistory);
+        const updatedHistory = currentHistory.slice(-10);
+
+        //計算新分數
         let nA = (team === 'A') ? d.scoreA + 1 : d.scoreA;
         let nB = (team === 'B') ? d.scoreB + 1 : d.scoreB;
+
         // 勝利判定
         const win = (nA >= t && nA-nB >= 2) || (nB >= t && nB-nA >= 2) || nA === 30 || nB === 30;
-        const h = d.history || []; h.push({scoreA: d.scoreA, scoreB: d.scoreB, server: d.server});
         await updateDoc(ref, { scoreA: nA, scoreB: nB, server: team, isWaitingNext: win, history: h.slice(-10) });
     };
 
