@@ -441,14 +441,31 @@
     // 確保 selectCourt 進入頁面前會跑這行
     const originalSelectCourt = window.selectCourt;
     window.selectCourt = async (id) => {
-        currentCourt = id;
-        await window.updatePreGameTitle(); // 進入前先更新標題
-        const ref = doc(db, "games", id);
-        const snap = await getDoc(ref);
-        if(snap.exists() && snap.data().nameA !== "準備中") {
-            showPage('scoring-page');
-        } else {
-            showPage('pre-game-page');
+        try {
+            currentCourt = id;
+            const ref = doc(db, "games", id);
+            const snap = await getDoc(ref);
+            
+            // 如果這個場地在新資料庫還沒建立，先幫它建立一個預設值
+            if (!snap.exists()) {
+                await setDoc(ref, { 
+                    nameA: "準備中", nameB: "準備中", 
+                    scoreA: 0, scoreB: 0, setsA: 0, setsB: 0,
+                    currentSet: 1, isWaitingNext: false 
+                });
+            }
+
+            const data = snap.exists() ? snap.data() : { nameA: "準備中" };
+
+            if(data.nameA !== "準備中") {
+                showPage('scoring-page');
+            } else {
+                await window.updatePreGameTitle();
+                showPage('pre-game-page');
+            }
+        } catch (e) {
+            console.error(e);
+            alert("資料庫連線失敗，請檢查 Firebase Config 或網路");
         }
     };
 
@@ -517,18 +534,21 @@
 
     // 專門更新標題文字的函式
     window.updatePreGameTitle = async () => {
-        // 1. 抓後台設定的局數
-        const configSnap = await getDoc(doc(db, "config", "match_settings"));
-        const globalSets = configSnap.exists() ? configSnap.data().defaultTotalSets : 3;
-        
-        // 2. 抓當前選單選中的分數
-        const currentScore = document.getElementById('target-score-select').value;
-        
-        // 3. 更新標題內容
-        const titleEl = document.getElementById('pre-game-title');
-        if(titleEl) {
-            titleEl.innerText = `場地 ${currentCourt} 設定 (${globalSets} 局定勝負, ${currentScore} 分制)`;
-        }
+        try {
+            // 1. 抓後台設定的局數
+            const configSnap = await getDoc(doc(db, "config", "match_settings"));
+            const globalSets = configSnap.exists() ? configSnap.data().defaultTotalSets : 3;
+            
+            // 2. 抓當前選單選中的分數
+            const scoreEl = document.getElementById('target-score-select');
+            const currentScore = scoreEl ? scoreEl.value : 11;            
+            // 3. 更新標題內容
+            const titleEl = document.getElementById('pre-game-title');
+            if(titleEl) {
+                titleEl.innerText = `場地 ${currentCourt} 設定 (${globalSets} 局定勝負, ${currentScore} 分制)`;
+            }
+        } catch (e) {
+        console.log("標題載入中...");
     };
 
     // --- 開始比賽  ---
