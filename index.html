@@ -518,23 +518,28 @@
             titleEl.innerText = `場地 ${currentCourt} 設定 (${globalSets} 局定勝負, ${currentScore} 分制)`;
         }
     };
-    
+
     // --- 開始比賽  ---
     window.startMatch = async () => {
         // 1. 取得 DOM 元素
-        const inputA = document.getElementById('playerA-name');
-        const inputB = document.getElementById('playerB-name');
-        const targetSelect = document.getElementById('target-score-select');
+        const elA = document.getElementById('playerA-name');
+        const elB = document.getElementById('playerB-name');
+        const elTarget = document.getElementById('target-score-select');
 
-        // 2. 取得數值 (只在這邊宣告一次 targetScoreValue)
-        const nA = (inputA && inputA.value) ? inputA.value : "A 隊";
-        const nB = (inputB && inputB.value) ? inputB.value : "B 隊";
-        const targetScoreValue = targetSelect ? parseInt(targetSelect.value) : 11;
+        // 2. 取得數值 (只宣告一次，解決紅底問題)
+        const nA = (elA && elA.value) ? elA.value : "A 隊";
+        const nB = (elB && elB.value) ? elB.value : "B 隊";
+        const targetScoreValue = elTarget ? parseInt(elTarget.value) : 11;
         
         try {
             // 取得設定的總局數
             const configSnap = await getDoc(doc(db, "config", "match_settings"));
-            const globalSets = configSnap.exists() ? configSnap.data().defaultTotalSets : 3; 
+            const globalSets = configSnap.exists() ? configSnap.data().defaultTotalSets : 3;
+            // 4. 更新標題 (場地 X 設定...)
+            const titleEl = document.getElementById('pre-game-title');
+            if(titleEl) {
+                titleEl.innerText = `場地 ${currentCourt} 設定 (${globalSets} 局定勝負, ${targetScoreValue} 分制)`;
+            } 
 
             await setDoc(doc(db, "games", currentCourt), {
                 scoreA: 0, scoreB: 0, 
