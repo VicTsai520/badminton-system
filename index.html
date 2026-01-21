@@ -339,7 +339,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAbj5MjkqNMCUwIM5b2Mbyw1OeJ55uZvMw",
@@ -560,9 +560,7 @@
         const ref = doc(db, "games", currentCourt);
         const snap = await getDoc(ref);
         if (!snap.exists()) return;
-
         const d = snap.data();
-        const t = d.targetScore || 11;
         
         // 1. 取得現有紀錄 (若無則建立空陣列)
         const h = d.history || [];
@@ -575,10 +573,10 @@
         });
 
         // 將舊紀錄推入陣列，並只保留最後 10 筆以免資料過大
-        currentHistory.push(newStateForHistory);
         const updatedHistory = currentHistory.slice(-10);
 
         //計算新分數
+        const t = d.targetScore || 11;
         let nA = (team === 'A') ? d.scoreA + 1 : d.scoreA;
         let nB = (team === 'B') ? d.scoreB + 1 : d.scoreB;
 
@@ -612,10 +610,7 @@
         const d = snap.data();
         const h = d.history || [];
         
-        if (h.length === 0) {
-            alert("已經沒有更早的紀錄了");
-            return;
-        }
+        if (h.length === 0) return alert("已經沒有更早的紀錄了");
         
         // 取得最後一筆歷史紀錄
         const lastState = h.pop();
