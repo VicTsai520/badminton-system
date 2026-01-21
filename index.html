@@ -342,6 +342,17 @@
             </select>
             <button class="btn btn-secondary" style="width:100%;" onclick="updateAllCourtsRule()">套用全場</button>
         </div>
+        <div class="admin-card">
+            <h3>全域比賽設定</h3>
+            <div class="input-group">
+                <label>統一比賽局數 (1或3局)</label>
+                <select id="admin-global-sets" class="btn" style="background: #f0f0f0; width: 100%;">
+                    <option value="1">一局定勝負</option>
+                    <option value="3" selected>三戰兩勝</option>
+                </select>
+            </div>
+            <button class="btn" onclick="saveGlobalSettings()" style="background: var(--primary); color: white; width: 100%; margin-top: 10px;">儲存全域設定</button>
+        </div>
     </div>
 
     <button id="global-back-btn" class="back-fab" onclick="smartBack()">返回</button>
@@ -500,8 +511,8 @@
         // 1. 取得 DOM 元素
         const inputA = document.getElementById('playerA-name');
         const inputB = document.getElementById('playerB-name');
-        const targetSelect = document.getElementById('target-score-select');
-
+        const targetScoreValue = parseInt(document.getElementById('target-score-select').value) || 11;
+       
         // 2. 取得數值 (只在這邊宣告一次 targetScoreValue)
         const nA = (inputA && inputA.value) ? inputA.value : "A 隊";
         const nB = (inputB && inputB.value) ? inputB.value : "B 隊";
@@ -511,19 +522,19 @@
 
         try {
         // 寫入 Firebase
+            const configSnap = await getDoc(doc(db, "config", "match_settings"));
+            const globalSets = configSnap.exists() ? configSnap.data().defaultTotalSets : 3; 
+
             await setDoc(doc(db, "games", currentCourt), {
-                scoreA: 0,
-                scoreB: 0,
-                setsA: 0,
-                setsB: 0,
-                nameA: nA,
-                nameB: nB,
-                currentSet: 1,
-                totalSets: totalSetsValue, // 新增：存入總局數
+                scoreA: 0, scoreB: 0, 
+                setsA: 0, setsB: 0,
+                nameA: nA, nameB: nB, 
+                currentSet: 1, 
+                totalSets: globalSets, // 使用後台設定的局數
                 server: 'A',
-                history: [],
-                isWaitingNext: false,
-                targetScore: targetScoreValue,
+                history: [], 
+                isWaitingNext: false, 
+                targetScore: targetScoreValue, 
                 judgeName: loggedJudge
             });
 
@@ -705,8 +716,7 @@
 
         // 3. 判斷是否已經達成勝局門檻 (比賽最終結束)
         if (newSetsA >= winThreshold || newSetsB >= winThreshold) {
-            const winnerName = newSetsA >= winThreshold ? d.nameA : d.nameB;
-            alert(`比賽結束！最終比數 ${newSetsA}:${newSetsB}\n恭喜 ${winnerName} 獲勝！`);
+            alert(`比賽結束！最終比數 ${newSetsA}:${newSetsB}`);
             
             // 比賽結束，直接執行清空場地的動作
             await window.clearCourtData(true); // 傳入 true 代表不需再次彈出 confirm
@@ -763,6 +773,18 @@
         const ref = doc(db, "games", currentCourt);
         const d = (await getDoc(ref)).data();
         await updateDoc(ref, { nameA: d.nameB, nameB: d.nameA, scoreA: d.scoreB, scoreB: d.scoreA, setsA: d.setsB, setsB: d.setsA, server: d.server==='A'?'B':'A' });
+    };
+
+    window.saveGlobalSettings = async () => {
+        const sets = parseInt(document.getElementById('admin-global-sets').value);
+        try {
+            await setDoc(doc(db, "config", "match_settings"), {
+                defaultTotalSets: sets
+            }, { merge: true });
+            alert("全域設定已更新！");
+        } catch (e) {
+            alert("儲存失敗，請檢查權限");
+        }
     };
 
     // --- 大廳與場地狀態監聽 ---
