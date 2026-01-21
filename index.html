@@ -76,6 +76,37 @@
         transition: 0.2s;
         }
 
+        /* LIVE 紅點呼吸燈效果 */
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #ff6b6b; /* 紅色 */
+            border-radius: 50%;
+            margin-right: 10px;
+            position: relative;
+            display: inline-block;
+            animation: live-breathe 1.5s infinite ease-in-out;
+            box-shadow: 0 0 8px rgba(255, 107, 107, 0.6);
+        }
+
+        @keyframes live-breathe {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+                box-shadow: 0 0 0px rgba(255, 107, 107, 0.4);
+            }
+            50% {
+                transform: scale(1.3);
+                opacity: 0.6;
+                box-shadow: 0 0 12px rgba(255, 107, 107, 0.9);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+                box-shadow: 0 0 0px rgba(255, 107, 107, 0.4);
+            }
+        }
+
         /* 場地按鈕 */
         .court-btn { 
             padding: 25px; 
@@ -265,6 +296,11 @@
                 <div id="zoom-hint" style="display:none; font-size: 0.8rem; color: #888; margin-top: 8px;">
                     🔍 點擊圖片可放大查看
                 </div>
+            </div>
+            <!--賽事live示意-->
+            <div style="display: flex; align-items: center; width: 100%; max-width: 500px; margin: 20px 0 10px 5px;">
+                <span class="live-dot"></span>
+                <h2 style="color: #4ecdc4; margin: 0; font-size: 1.2rem; letter-spacing: 1px;">LIVE 即時賽況</h2>
             </div>
         </div>
         <div id="live-scoreboard-grid" style="width: 100%; max-width: 500px;"></div>
@@ -698,5 +734,4 @@
 </script>
 </body>
 </html>
-
 
