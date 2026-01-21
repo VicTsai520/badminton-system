@@ -556,35 +556,32 @@
         });
     }
 
+    // 補齊 addScore, resetMatch 等其他函式的 window 掛載...
     window.addScore = async (team) => {
         const ref = doc(db, "games", currentCourt);
         const snap = await getDoc(ref);
         if (!snap.exists()) return;
+
         const d = snap.data();
-        
-        // 1. 取得現有紀錄 (若無則建立空陣列)
-        const h = d.history || [];
-        
-        // 2. 存入當前狀態 
-        h.push({
-            scoreA: d.scoreA,
-            scoreB: d.scoreB,
-            server: d.server
-        });
-
-        // 將舊紀錄推入陣列，並只保留最後 10 筆以免資料過大
-        const updatedHistory = currentHistory.slice(-10);
-
-        //計算新分數
         const t = d.targetScore || 11;
+
+        // 記錄當前狀態到 history
+        const h = d.history || [];
+        h.push({scoreA: d.scoreA, scoreB: d.scoreB, server: d.server}); // 統一使用 h
+
         let nA = (team === 'A') ? d.scoreA + 1 : d.scoreA;
         let nB = (team === 'B') ? d.scoreB + 1 : d.scoreB;
-
-        // 勝利判定
-        const win = (nA >= t && nA-nB >= 2) || (nB >= t && nB-nA >= 2) || nA === 30 || nB === 30;
-        await updateDoc(ref, { scoreA: nA, scoreB: nB, server: team, isWaitingNext: win, history: h.slice(-10) });
+        // 判定勝負邏輯
+        const win = (nA >= t && nA-nB >= 2) || nA === 30 || nB === 30; // 簡化判定
+        
+        await updateDoc(ref, { 
+            scoreA: nA, 
+            scoreB: nB, 
+            server: team, 
+            isWaitingNext: win, 
+            history: h // 務必加上這一行
+        });
     };
-
     //重設按鈕
     window.resetMatch = async () => {
         if(confirm("確定要重設本局比分嗎？(將清空歷史記錄)")) {
@@ -620,8 +617,8 @@
             scoreA: lastState.scoreA,
             scoreB: lastState.scoreB,
             server: lastState.server,
-            isWaitingNext: false, // 恢復時強制關閉獲勝彈窗
-            history: h
+            isWaitingNext: false, 
+            history: h // 務必加上這一行，代表移除最後一筆後的紀錄
         });
     };
     
@@ -765,30 +762,7 @@
             }
         });
     });
-    // 補齊 addScore, resetMatch 等其他函式的 window 掛載...
-    window.addScore = async (team) => {
-        const ref = doc(db, "games", currentCourt);
-        const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-
-        const d = snap.data();
-        const t = d.targetScore || 11;
-
-        // 記錄當前狀態到 history
-        const h = d.history || [];
-        h.push({
-            scoreA: d.scoreA,
-            scoreB: d.scoreB,
-            server: d.server
-        });
-
-        let nA = (team === 'A') ? d.scoreA + 1 : d.scoreA;
-        let nB = (team === 'B') ? d.scoreB + 1 : d.scoreB;
-        // 判定勝負邏輯
-        const win = (nA >= t && nA-nB >= 2) || nA === 30 || nB === 30; // 簡化判定
-        
-        await updateDoc(ref, { scoreA: nA, scoreB: nB, server: team, isWaitingNext: win });
-    };
+    
 </script>
 </body>
 </html>
