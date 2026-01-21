@@ -657,7 +657,7 @@
                             ${d.nameA} ${isReady ? '' : 'vs ' + d.nameB}
                         </div>
                         <div style="font-size:0.75rem; color:#666; margin-top:4px;">
-                            ${isReady ? '等待開賽' : '執法裁判: ' + (d.judgeName || '無')}
+                            ${isReady ? '等待開賽' : '裁判: ' + (d.judgeName || '無')}
                         </div>
                     </div>
                     <div style="text-align:right; min-width:90px; display: flex; flex-direction: column; align-items: flex-end;">
@@ -687,7 +687,7 @@
                 if(btn) {
                     if(d.nameA !== "準備中") {
                         btn.style.borderColor = "var(--secondary)";
-                        btn.innerHTML = `場地 ${id}<br><span style="font-size:0.7rem; color:var(--secondary);">執法中: ${d.judgeName}</span>`;
+                        btn.innerHTML = `場地 ${id}<br><span style="font-size:0.7rem; color:var(--secondary);">比賽中: ${d.judgeName}</span>`;
                     } else {
                         btn.style.borderColor = "#eee"; btn.innerHTML = `場地 ${id}`;
                     }
@@ -698,4 +698,5 @@
 </script>
 </body>
 </html>
+
 
