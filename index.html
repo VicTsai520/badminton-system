@@ -323,36 +323,38 @@
     </div>
 
     <div id="admin-master-page" class="page">
-        <h2>🛠️ 管理後台</h2>
-        <div class="admin-box">
-            <h4>1. 首頁、公告、賽程圖</h4>
-            <p style="font-size: 0.8rem; color: #888;">* 留空則表示不變更該項內容</p>
-            <input type="text" id="admin-home-img-url" placeholder="變更首頁 Logo 圖片網址">
-            <textarea id="admin-announcement" placeholder="變更公告內容"></textarea>
-            <input type="text" id="admin-img-url" placeholder="變更大廳賽程圖網址">
-            <button class="btn btn-primary" style="width:100%;" onclick="publishNotice()">儲存並發布</button>
-            <hr>
-            <h4>2. 全場分數規則</h4>
-            <select id="rule-score-target">
-                <option value="11" selected>11 分制</option>
-                <option value="15">15 分制</option>
-                <option value="21">21 分制</option>
-                <option value="25">25 分制</option>
-                <option value="31">31 分制</option>
-            </select>
-            <button class="btn btn-secondary" style="width:100%;" onclick="updateAllCourtsRule()">套用全場</button>
-        </div>
         <div class="admin-card animate__animated animate__fadeIn">
-            <h3><i class="fas fa-cog"></i> 全域比賽設定</h3>
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 8px; font-weight: bold;">統一比賽局數</label>
-                <select id="admin-global-sets" class="btn" style="background: white; color: var(--text-main); width: 100%; border: 1px solid #ddd;">
-                    <option value="1">一局定勝負 (1 局制)</option>
-                    <option value="3" selected>三戰兩勝 (3 局制)</option>
-                </select>
-                <p style="font-size: 0.8rem; color: #666; margin-top: 8px;">※ 儲存後，後續新開始的比賽將自動套用此設定。</p>
+            <h2 style="text-align: center; color: var(--primary); margin-bottom: 25px;">
+                <i class="fas fa-user-shield"></i> 系統管理後台
+            </h2>
+            
+            <div class="admin-section" style="margin-bottom: 30px;">
+                <h3 style="border-left: 5px solid var(--primary); padding-left: 10px;">1. 內容管理</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button class="btn" onclick="showPage('index-page')" style="background: #eee;">回首頁</button>
+                    <button class="btn" onclick="saveAnnouncement()" style="background: var(--primary); color: white;">更新公告</button>
+                    <button class="btn" onclick="saveBracketUrl()" style="background: var(--accent); color: var(--text-main); grid-column: span 2;">更新賽程圖 URL</button>
+                </div>
             </div>
-            <button class="btn" onclick="saveGlobalSettings()" style="background: var(--primary); color: white; width: 100%;">儲存全域設定</button>
+    
+            <div class="admin-section" style="margin-bottom: 30px;">
+                <h3 style="border-left: 5px solid var(--secondary); padding-left: 10px;">2. 分數規則設定</h3>
+                <p style="font-size: 0.9rem; color: #666;">（此設定將影響場地選擇頁的分數選項）</p>
+                <textarea id="admin-score-rules" class="btn" style="width: 100%; height: 80px; background: white; border: 1px solid #ddd; text-align: left; padding: 10px; border-radius: 12px;">11, 15, 21, 25, 30</textarea>
+                <button class="btn" onclick="saveScoreRules()" style="background: var(--secondary); color: white; width: 100%; margin-top: 10px;">儲存分數規則</button>
+            </div>
+    
+            <div class="admin-section" style="margin-bottom: 30px;">
+                <h3 style="border-left: 5px solid var(--text-main); padding-left: 10px;">3. 全域比賽設定</h3>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 12px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">統一比賽局數</label>
+                    <select id="admin-global-sets" class="btn" style="background: white; color: var(--text-main); width: 100%; border: 1px solid #ddd; padding: 10px;">
+                        <option value="1">一局定勝負 (1 局制)</option>
+                        <option value="3" selected>三戰兩勝 (3 局制)</option>
+                    </select>
+                    <button class="btn" onclick="saveGlobalSettings()" style="background: var(--text-main); color: white; width: 100%; margin-top: 15px;">儲存全域局數</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -709,7 +711,7 @@
         // 取得該場地啟動時帶入的總局數設定
         const totalSets = d.totalSets || 3;
         const winThreshold = Math.ceil(totalSets / 2); // 1局需1勝, 3局需2勝
-        
+
         // 3. 判斷是否已經達成勝局門檻 (比賽最終結束)
         if (newSetsA >= winThreshold || newSetsB >= winThreshold) {
             alert(`比賽結束！恭喜 ${newSetsA >= winThreshold ? d.nameA : d.nameB} 獲勝！`);
@@ -778,7 +780,7 @@
             await setDoc(doc(db, "config", "match_settings"), {
                 defaultTotalSets: sets
             }, { merge: true });
-            alert("✅ 全域設定已更新！");
+            alert("✅ 全域設定已更新！" + sets + " 局制！");
         } catch (e) {
             console.error(e);
             alert("❌ 儲存失敗，請檢查權限");
