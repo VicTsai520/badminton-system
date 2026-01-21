@@ -437,22 +437,7 @@
         }
     };
 
-    // 每次選場地或改分數選單時，更新標題文字
-    window.updatePreGameTitle = async () => {
-        try{
-            const configSnap = await getDoc(doc(db, "config", "match_settings"));
-            const globalSets = configSnap.exists() ? configSnap.data().defaultTotalSets : 3;
-            const currentScore = document.getElementById('target-score-select').value;
-            const titleEl = document.getElementById('pre-game-title');
-            if(titleEl) {
-                titleEl.innerText = `場地 ${currentCourt} 設定 (${globalSets} 局定勝負, ${currentScore} 分制)`;
-            }   
-        } catch (e) {
-        console.log("標題更新略過", e);
-        }
-        
-    };
-
+    
     // 確保 selectCourt 進入頁面前會跑這行
     const originalSelectCourt = window.selectCourt;
     window.selectCourt = async (id) => {
