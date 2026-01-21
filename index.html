@@ -339,7 +339,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAbj5MjkqNMCUwIM5b2Mbyw1OeJ55uZvMw",
@@ -374,9 +374,12 @@
         else alert('密碼錯誤'); 
     };
     
-    document.getElementById('staff-name-list').onchange = (e) => {
-        document.getElementById('staff-name-manual').style.display = (e.target.value === '其他') ? 'block' : 'none';
-    };
+    const staffSelect = document.getElementById('staff-name-list');
+    if(staffSelect) {
+        staffSelect.onchange = (e) => {
+            document.getElementById('staff-name-manual').style.display = (e.target.value === '其他') ? 'block' : 'none';
+        };
+    }
 
     window.confirmStaff = () => {
         const sel = document.getElementById('staff-name-list').value;
@@ -408,7 +411,7 @@
         }
 
         try {
-            await updateDoc(doc(db, "config", "announcement"), updateData);
+            await updateDoc(doc(db, "config", "announcement"), updateData, { merge: true });
             alert("更新成功！未填寫部分已維持原樣。");
             
             // 更新後清空輸入框，便下次使用
@@ -443,7 +446,7 @@
             sImg.style.display = 'block';
             document.getElementById('zoom-hint').style.display = 'block'; // 顯示提示
             // 點擊時打開放大器
-            sImg.onclick = () => openImageViewer(d.imgUrl);
+            sImg.onclick = () => window.openImageViewer(d.imgUrl);
             } else {
                 sImg.style.display = 'none';
             }
