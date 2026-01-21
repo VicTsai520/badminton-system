@@ -250,6 +250,15 @@
             <label>隊伍 B</label><input type="text" id="teamB-names" placeholder="選手名稱">
             <button class="btn btn-primary" style="width:100%; margin-top:20px;" onclick="startMatch()">開始比賽</button>
         </div>
+
+        <!--局數設定-->
+        <div class="input-group">
+            <label>比賽局數</label>
+            <select id="match-sets-select" class="btn" style="background: white; color: var(--text-main); width: 100%;">
+                <option value="1">一局定勝負 (1局)</option>
+                <option value="3" selected>三戰兩勝 (3局)</option>
+            </select>
+        </div>
     </div>
 
     <div id="scoring-page" class="page">
@@ -497,6 +506,8 @@
         const nA = (inputA && inputA.value) ? inputA.value : "A 隊";
         const nB = (inputB && inputB.value) ? inputB.value : "B 隊";
         const targetScoreValue = targetSelect ? parseInt(targetSelect.value) : 11;
+        // 取得設定的總局數
+        const totalSetsValue = parseInt(document.getElementById('match-sets-select').value) || 3;
 
         try {
         // 寫入 Firebase
@@ -508,6 +519,7 @@
                 nameA: nA,
                 nameB: nB,
                 currentSet: 1,
+                totalSets: totalSetsValue, // 新增：存入總局數
                 server: 'A',
                 history: [],
                 isWaitingNext: false,
@@ -672,22 +684,58 @@
     };
     window.confirmNextSet = async () => {
         const ref = doc(db, "games", currentCourt);
-        const d = (await getDoc(ref)).data();
-        const winA = d.scoreA > d.scoreB;
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+        
+        const d = snap.data();
+        
+        // 1. 判定這一局誰贏了，並計算新的局數比分
+        let newSetsA = d.setsA || 0;
+        let newSetsB = d.setsB || 0;
+        if (d.scoreA > d.scoreB) {
+            newSetsA++;
+        } else {
+            newSetsB++;
+        }
+
+        // 2. 取得設定的總局數 (預設為 3)，並計算贏球門檻
+        // 1 局制門檻是 1 勝；3 局制門檻是 2 勝
+        const totalSets = d.totalSets || 3;
+        const winThreshold = Math.ceil(totalSets / 2);
+
+        // 3. 判斷是否已經達成勝局門檻 (比賽最終結束)
+        if (newSetsA >= winThreshold || newSetsB >= winThreshold) {
+            const winnerName = newSetsA >= winThreshold ? d.nameA : d.nameB;
+            alert(`比賽結束！最終比數 ${newSetsA}:${newSetsB}\n恭喜 ${winnerName} 獲勝！`);
+            
+            // 比賽結束，直接執行清空場地的動作
+            await window.clearCourtData(true); // 傳入 true 代表不需再次彈出 confirm
+            return;
+        }
+
+        // 4. 若尚未達到勝局門檻，則進入下一局，重設分數
         await updateDoc(ref, { 
-            setsA: winA ? (d.setsA + 1) : d.setsA, 
-            setsB: !winA ? (d.setsB + 1) : d.setsB, 
-            scoreA: 0, scoreB: 0, currentSet: d.currentSet + 1, isWaitingNext: false, history: [] 
+            setsA: newSetsA, 
+            setsB: newSetsB, 
+            scoreA: 0, 
+            scoreB: 0, 
+            currentSet: (d.currentSet || 1) + 1, 
+            isWaitingNext: false, 
+            history: [] 
         });
+        
+        // 隱藏獲勝燈箱
         document.getElementById('game-over-overlay').style.display = 'none';
     };
 
 
-    window.clearCourtData = async () => {
-        if(confirm("確定清空場地？將重設所有比分與裁判名。")) {
+    window.clearCourtData = async (auto = false) => {
+        // 如果不是自動觸發的，就彈出確認視窗
+        if(auto || confirm("確定清空場地？將重設所有比分與裁判名。")) {
             const ref = doc(db, "games", currentCourt);
-            const d = (await getDoc(ref)).data();
-            const currentTarget = d.targetScore || 11; // 記住目前的分制
+            const snap = await getDoc(ref);
+            const d = snap.data();
+            const currentTarget = d.targetScore || 11; 
             
             await setDoc(ref, { 
                 nameA: "準備中", 
@@ -698,12 +746,15 @@
                 setsB: 0, 
                 currentSet: 1, 
                 judgeName: "", 
-                targetScore: currentTarget, // 帶回原本的分制
+                targetScore: currentTarget, 
+                totalSets: d.totalSets || 3, // 保持原本的局數設定
                 history: [],
                 isWaitingNext: false,
                 server: 'A'
             });
             showPage('court-selection-page');
+            // 確保燈箱關閉
+            document.getElementById('game-over-overlay').style.display = 'none';
         }
     };
 
