@@ -540,7 +540,7 @@
             if(titleEl) {
                 titleEl.innerText = `場地 ${currentCourt} 設定 (${globalSets} 局定勝負, ${targetScoreValue} 分制)`;
             } 
-
+            // 5. 寫入 Firebase
             await setDoc(doc(db, "games", currentCourt), {
                 scoreA: 0, scoreB: 0, 
                 setsA: 0, setsB: 0,
