@@ -717,11 +717,8 @@
         // 1. 判定這一局誰贏了，並計算新的局數比分
         let newSetsA = d.setsA || 0;
         let newSetsB = d.setsB || 0;
-        if (d.scoreA > d.scoreB) {
-            newSetsA++;
-        } else {
-            newSetsB++;
-        }
+        if (d.scoreA > d.scoreB) newSetsA++; else newSetsB++;
+        
 
         // 取得該場地啟動時帶入的總局數設定
         const totalSets = d.totalSets || 3;
