@@ -15,11 +15,11 @@
 
         /* 按鈕樣式 */
         .btn { 
-            padding: 15px 25px; 
+            padding: 16px 30px; 
             border-radius: 50px; 
             border: none; 
-            font-size: 1rem; 
-            font-weight: bold; 
+            font-size: 1.1rem; 
+            font-weight: 700; 
             cursor: pointer; 
             transition: all 0.3s; cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 加入彈性動畫 */
             margin: 10px; 
@@ -36,19 +36,32 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.15); 
         }
         /* 點擊瞬間效果：向下凹陷、縮小 */
-        .btn:active { transform: translateY(1px) scale(0.95); 
+        .btn:active { transform: translateY(1px) scale(0.96); 
             box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            transition: 0.1s;
         }
         .btn-primary { background: linear-gradient(135deg, #4ecdc4 0%, #3bb3ab 100%); 
-            color: white; 
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3); /* 加入同色系陰影 */
         }
+
+        .btn-primary:hover { 
+            /* 滑鼠移過去後，漸層反轉並加深，產生「亮起」的感覺 */
+            background: linear-gradient(135deg, #3bb3ab 0%, #2d8d87 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(78, 205, 196, 0.4);
+        }
+        /* 2. 選手/觀眾大廳：維持外框感但加強 Hover */
         .btn-outline { background: white; 
-            border: 2px solid var(--primary); 
-            color: var(--primary); 
+            border: 2px solid #4ecdc4; 
+            color: #3bb3ab; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
         .btn-outline:hover {
-            background-color: var(--primary);
-            color: white; /* 懸停時反白，增加強烈的互動感 */
+            background-color: #4ecdc4;
+            color: white; /* 移過去時填滿顏色，增加互動驚喜 */
+            transform: translateY(-3px);
         }
         .btn-secondary { background: linear-gradient(135deg, #ff6b6b 0%, #ee5253 100%); color: white; }
         .btn-gray { background-color: #95a5a6; color: white; }
@@ -614,15 +627,15 @@
                             ${isReady ? '等待開賽' : '執法裁判: ' + (d.judgeName || '無')}
                         </div>
                     </div>
-                    <div style="text-align:right; min-width:100px; display: flex; flex-direction: column; justify-content: center; align-items: flex-end;">
-                        <div style="font-size:1.85rem; font-weight: 900; color:${isReady ? '#ccc' : scoreColor}; line-height: 1;">
-                            ${d.scoreA} : ${d.scoreB}
+                    <div style="text-align:right; min-width:90px; display: flex; flex-direction: column; align-items: flex-end;">
+                        <div style="font-size:1.9rem; font-weight:900; color:${scoreColor}; line-height:1;">
+                            ${d.scoreA}:${d.scoreB}
                         </div>
                         
-                        <div style="font-size:0.7rem; 
+                        <div style="font-size:0.75rem; 
                                     background: #2f3e46; 
                                     color: white; 
-                                    padding: 3px 8px; 
+                                    padding: 3px 10px; 
                                     border-radius: 6px; 
                                     display: inline-block; 
                                     margin-top: 8px; 
@@ -652,5 +665,6 @@
 </script>
 </body>
 </html>
+
 
 
