@@ -15,20 +15,76 @@
 
         /* 按鈕樣式 */
         .btn { 
-            padding: 15px 25px; border-radius: 50px; border: none; font-size: 1rem; font-weight: bold; 
-            cursor: pointer; transition: all 0.2s; margin: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-            display: inline-block; text-decoration: none; text-align: center;
+            padding: 15px 25px; 
+            border-radius: 50px; 
+            border: none; 
+            font-size: 1rem; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: all 0.3s; cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 加入彈性動畫 */
+            margin: 10px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            display: inline-block; 
+            text-decoration: none; 
+            text-align: center;
+            position: relative;
+            top: 0;
         }
-        .btn:active { transform: scale(0.95); }
-        .btn-primary { background: linear-gradient(135deg, #4ecdc4 0%, #45b7af 100%); color: white; }
-        .btn-outline { background: white; border: 2px solid var(--primary); color: var(--primary); }
+        /* 懸停效果：向上浮起、陰影加深 */
+        .btn:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); 
+        }
+        /* 點擊瞬間效果：向下凹陷、縮小 */
+        .btn:active { transform: translateY(1px) scale(0.95); 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+        }
+        .btn-primary { background: linear-gradient(135deg, #4ecdc4 0%, #3bb3ab 100%); 
+            color: white; 
+        }
+        .btn-outline { background: white; 
+            border: 2px solid var(--primary); 
+            color: var(--primary); 
+        }
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white; /* 懸停時反白，增加強烈的互動感 */
+        }
         .btn-secondary { background: linear-gradient(135deg, #ff6b6b 0%, #ee5253 100%); color: white; }
         .btn-gray { background-color: #95a5a6; color: white; }
+        .btn-gray:hover {
+            background-color: #7f8c8d; /* 懸停時稍微變深 */
+        }
+
+        /* 圖片放大檢視器的關閉按鈕互動 */
+        #image-viewer span:hover {
+        color: var(--secondary);
+        transform: scale(1.2);
+        transition: 0.2s;
+        }
 
         /* 場地按鈕 */
         .court-btn { 
-            padding: 25px; border-radius: 20px; border: 2px solid #eee; background: white; 
-            font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s;
+            padding: 25px; 
+            border-radius: 20px; 
+            border: 2px solid #eee; 
+            background: white; 
+            font-size: 1.1rem; 
+            font-weight: bold; 
+            cursor: pointer; 
+            width: 100%; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+            transition: all 0.3s ease;
+        }
+        .court-btn:hover {
+            border-color: var(--primary);
+            background-color: #f9fdfc;
+            transform: scale(1.02);
+        }
+
+        .court-btn:active {
+            background-color: #e0f2f1;
+            transform: scale(0.98);
         }
 
         /* 右下角返回按鈕 */
@@ -187,7 +243,9 @@
         <h1 style="color:var(--primary);">賽事資訊大廳</h1>
         <div class="admin-box" style="text-align:center; margin-bottom:20px;">
             <h3 id="announcement-text" style="margin:0;">載入公告中...</h3>
-            <img id="schedule-img-display" src="" style="max-width:100%; border-radius:10px; display:none; margin-top:15px;">
+            <div style="position: relative; display: inline-block; width: 100%;"></div>
+            <img id="schedule-img-display" src="" style="max-width:100%; border-radius:10px; display:none; margin-top:15px; transition: 0.3s;">
+            <div id="zoom-hint" style="display:none; font-size: 0.7rem; color: #888; margin-top: 5px;">🔍 點擊圖片可放大查看</div>
         </div>
         <div id="live-scoreboard-grid" style="width: 100%; max-width: 500px;"></div>
     </div>
@@ -317,10 +375,11 @@
             logo.innerHTML = (d.homeImg) ? `<img src="${d.homeImg}" style="max-width:85%; max-height:180px; border-radius:20px; box-shadow:0 8px 20px rgba(0,0,0,0.1);">` : `<span style="font-size: 80px;">🏸</span>`;
             document.getElementById('announcement-text').innerText = d.content || "歡迎參加比賽";
             const sImg = document.getElementById('schedule-img-display');
+            //圖片更新
             if(d.imgUrl) { 
             sImg.src = d.imgUrl; 
             sImg.style.display = 'block';
-            sImg.style.cursor = 'zoom-in'; // 提示使用者可以點擊
+            document.getElementById('zoom-hint').style.display = 'block'; // 顯示提示
             // 點擊時打開放大器
             sImg.onclick = () => openImageViewer(d.imgUrl);
             } else {
