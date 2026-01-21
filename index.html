@@ -196,9 +196,10 @@
         <h2>🛠️ 管理後台</h2>
         <div class="admin-box">
             <h4>1. 首頁、公告、賽程圖</h4>
-            <input type="text" id="admin-home-img-url" placeholder="首頁 Logo 圖片網址">
-            <textarea id="admin-announcement" placeholder="公告內容"></textarea>
-            <input type="text" id="admin-img-url" placeholder="大廳賽程圖網址">
+            <p style="font-size: 0.8rem; color: #888;">* 留空則表示不變更該項內容</p>
+            <input type="text" id="admin-home-img-url" placeholder="變更首頁 Logo 圖片網址">
+            <textarea id="admin-announcement" placeholder="變更公告內容"></textarea>
+            <input type="text" id="admin-img-url" placeholder="變更大廳賽程圖網址">
             <button class="btn btn-primary" style="width:100%;" onclick="publishNotice()">儲存並發布</button>
             <hr>
             <h4>2. 全場分數規則</h4>
@@ -263,12 +264,35 @@
     window.adminLogin = () => { if(prompt("管理密碼") === '9999') showPage('admin-master-page'); };
 
     window.publishNotice = async () => {
-        await setDoc(doc(db, "config", "announcement"), { 
-            content: document.getElementById('admin-announcement').value, 
-            homeImg: document.getElementById('admin-home-img-url').value,
-            imgUrl: document.getElementById('admin-img-url').value 
-        });
-        alert("公告與圖片已更新");
+        const homeImg = document.getElementById('admin-home-img-url').value;
+        const announcement = document.getElementById('admin-announcement').value;
+        const imgUrl = document.getElementById('admin-img-url').value;
+
+        const updateData = {};
+        
+        // 只有當欄位有值時，才加入更新物件中
+        if (homeImg) updateData.homeImg = homeImg;
+        if (announcement) updateData.content = announcement;
+        if (imgUrl) updateData.imgUrl = imgUrl;
+
+        // 如果沒有填寫任何東西，就不執行更新
+        if (Object.keys(updateData).length === 0) {
+            alert("請至少輸入一項要變更的內容");
+            return;
+        }
+
+        try {
+            await updateDoc(doc(db, "config", "announcement"), updateData);
+            alert("更新成功！未填寫部分已維持原樣。");
+            
+            // 更新後清空輸入框，方便下次使用
+            document.getElementById('admin-home-img-url').value = "";
+            document.getElementById('admin-announcement').value = "";
+            document.getElementById('admin-img-url').value = "";
+        } catch (e) {
+            console.error("更新失敗", e);
+            alert("更新失敗，請確認資料庫權限");
+        }
     };
 
     window.updateAllCourtsRule = async () => {
