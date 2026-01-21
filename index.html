@@ -250,15 +250,6 @@
             <label>隊伍 B</label><input type="text" id="teamB-names" placeholder="選手名稱">
             <button class="btn btn-primary" style="width:100%; margin-top:20px;" onclick="startMatch()">開始比賽</button>
         </div>
-
-        <!--局數設定-->
-        <div class="input-group">
-            <label>比賽局數</label>
-            <select id="match-sets-select" class="btn" style="background: white; color: var(--text-main); width: 100%;">
-                <option value="1">一局定勝負 (1局)</option>
-                <option value="3" selected>三戰兩勝 (3局)</option>
-            </select>
-        </div>
     </div>
 
     <div id="scoring-page" class="page">
@@ -341,18 +332,17 @@
                 <option value="31">31 分制</option>
             </select>
             <button class="btn btn-secondary" style="width:100%;" onclick="updateAllCourtsRule()">套用全場</button>
-        </div>
-        <div class="admin-card animate__animated animate__fadeIn">
-            <h3><i class="fas fa-cog"></i> 全域比賽設定</h3>
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 8px; font-weight: bold;">統一比賽局數</label>
-                <select id="admin-global-sets" class="btn" style="background: white; color: var(--text-main); width: 100%; border: 1px solid #ddd;">
-                    <option value="1">一局定勝負 (1 局制)</option>
-                    <option value="3" selected>三戰兩勝 (3 局制)</option>
-                </select>
-                <p style="font-size: 0.8rem; color: #666; margin-top: 8px;">※ 儲存後，後續新開始的比賽將自動套用此設定。</p>
-            </div>
-            <button class="btn" onclick="saveGlobalSettings()" style="background: var(--primary); color: white; width: 100%;">儲存全域設定</button>
+            
+            <hr>
+
+            <h4>3. 全域比賽設定</h4>
+            <p style="font-size: 0.8rem; color: #888;">* 設定新比賽的預設局數</p>
+            <select id="admin-global-sets" style="width:100%; margin-bottom:10px;">
+                <option value="1">一局定勝負 (1 局制)</option>
+                <option value="3" selected>三戰兩勝 (3 局制)</option>
+            </select>
+            <button class="btn btn-primary" style="width:100%;" onclick="saveGlobalSettings()">儲存全域局數</button>
+    
         </div>
     </div>
 
