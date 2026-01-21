@@ -772,14 +772,26 @@
     window.addScore = async (team) => {
         const ref = doc(db, "games", currentCourt);
         const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+
         const d = snap.data();
         const t = d.targetScore || 11;
+
+        // 記錄當前狀態到 history
+        const h = d.history || [];
+        h.push({
+            scoreA: d.scoreA,
+            scoreB: d.scoreB,
+            server: d.server
+        });
+
         let nA = (team === 'A') ? d.scoreA + 1 : d.scoreA;
         let nB = (team === 'B') ? d.scoreB + 1 : d.scoreB;
+        // 判定勝負邏輯
         const win = (nA >= t && nA-nB >= 2) || nA === 30 || nB === 30; // 簡化判定
+        
         await updateDoc(ref, { scoreA: nA, scoreB: nB, server: team, isWaitingNext: win });
     };
 </script>
 </body>
 </html>
-
