@@ -462,31 +462,42 @@
     // --- 計分核心（含重入邏輯） ---
     window.selectCourt = async (id) => {
         currentCourt = id;
-        const snap = await getDoc(doc(db, "games", id));
-        if(snap.exists()){
-            const d = snap.data();
-            // 只要場地有人且不是空場，就直接跳計分頁面 (裁判恢復機制)
-            if(d.nameA !== "準備中") {
-                showPage('scoring-page');
+        try {
+            const snap = await getDoc(doc(db, "games", id));
+            if(snap.exists()){
+                const d = snap.data();
+                if(d.nameA !== "準備中") {
+                    showPage('scoring-page');
+                } else {
+                    document.getElementById('setup-court-label').innerText = `場地 ${id} 設定`;
+                    showPage('pre-game-page');
+                }
             } else {
+                // 如果文件不存在，先跳設定頁
                 document.getElementById('setup-court-label').innerText = `場地 ${id} 設定`;
                 showPage('pre-game-page');
             }
+            listenToCourt(id);
+        } catch (e) {
+            console.error("讀取場地失敗", e);
+            alert("資料庫連線失敗，請檢查權限");
         }
-        listenToCourt(id);
     };
-
+    // --- 開始比賽  ---
     window.startMatch = async () => {
-        const snap = await getDoc(doc(db, "games", currentCourt));
-        const t = snap.exists() ? (snap.data().targetScore || 11) : 11;
-        await setDoc(doc(db, "games", currentCourt), { 
-            scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, 
-            nameA: document.getElementById('teamA-names').value || "A 隊", 
-            nameB: document.getElementById('teamB-names').value || "B 隊", 
-            currentSet: 1, server: 'A', history: [], isWaitingNext: false, 
-            targetScore: t, judgeName: loggedJudge 
-        });
-        showPage('scoring-page');
+        const teamA = document.getElementById('teamA-names').value || "A 隊";
+        const teamB = document.getElementById('teamB-names').value || "B 隊";
+        try {
+            await setDoc(doc(db, "games", currentCourt), { 
+                scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, 
+                nameA: teamA, nameB: teamB, 
+                currentSet: 1, server: 'A', history: [], isWaitingNext: false, 
+                targetScore: 11, judgeName: loggedJudge 
+            });
+            showPage('scoring-page');
+        } catch (e) {
+            alert("寫入失敗");
+        }
     };
     // --- 修改監聽邏輯以加入局點變紅與 Deuce 提醒 (問題3) ---
     function listenToCourt(id) {
@@ -737,6 +748,17 @@
             }
         });
     });
+    // 補齊 addScore, resetMatch 等其他函式的 window 掛載...
+    window.addScore = async (team) => {
+        const ref = doc(db, "games", currentCourt);
+        const snap = await getDoc(ref);
+        const d = snap.data();
+        const t = d.targetScore || 11;
+        let nA = (team === 'A') ? d.scoreA + 1 : d.scoreA;
+        let nB = (team === 'B') ? d.scoreB + 1 : d.scoreB;
+        const win = (nA >= t && nA-nB >= 2) || nA === 30 || nB === 30; // 簡化判定
+        await updateDoc(ref, { scoreA: nA, scoreB: nB, server: team, isWaitingNext: win });
+    };
 </script>
 </body>
 </html>
