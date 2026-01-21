@@ -527,7 +527,34 @@
             alert("已重設比分");
         }
     };
-
+    // --- 恢復功能 (Undo) ---
+    // --- 恢復功能 (Undo) ---
+    window.undo = async () => {
+        const ref = doc(db, "games", currentCourt);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+        
+        const d = snap.data();
+        const h = d.history || [];
+        
+        if (h.length === 0) {
+            alert("已經沒有更早的紀錄了");
+            return;
+        }
+        
+        // 取得最後一筆歷史紀錄
+        const lastState = h.pop();
+        
+        // 更新回 Firebase，並把剩下的 history 存回去
+        await updateDoc(ref, {
+            scoreA: lastState.scoreA,
+            scoreB: lastState.scoreB,
+            server: lastState.server,
+            isWaitingNext: false, // 恢復時強制關閉獲勝彈窗
+            history: h
+        });
+    };
+    
     // --- 修改清空場地功能以維持分制  ---
     window.clearCourtData = async () => {
         if(confirm("確定清空場地？將重設所有比分與裁判名。")) {
