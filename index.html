@@ -490,12 +490,13 @@
     window.startMatch = async () => {
         const teamA = document.getElementById('teamA-names').value || "A 隊";
         const teamB = document.getElementById('teamB-names').value || "B 隊";
+        const targetScoreValue = parseInt(document.getElementById('target-score-select').value); // 獲取選單的分數
         try {
             await setDoc(doc(db, "games", currentCourt), { 
                 scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, 
                 nameA: teamA, nameB: teamB, 
                 currentSet: 1, server: 'A', history: [], isWaitingNext: false, 
-                targetScore: 11, judgeName: loggedJudge 
+                targetScore: targetScoreValue, // 確保這行有把選單值存進去
             });
             showPage('scoring-page');
         } catch (e) {
@@ -563,6 +564,7 @@
         if (!snap.exists()) return;
 
         const d = snap.data();
+        // 這裡會讀取設定分數 11, 15, 21, 25, 31 分
         const t = d.targetScore || 11;
 
         // 記錄當前狀態到 history
@@ -571,9 +573,14 @@
 
         let nA = (team === 'A') ? d.scoreA + 1 : d.scoreA;
         let nB = (team === 'B') ? d.scoreB + 1 : d.scoreB;
-        // 判定勝負邏輯
-        const win = (nA >= t && nA-nB >= 2) || nA === 30 || nB === 30; // 簡化判定
-        
+        // --- 通用判定公式 ---
+        // 條件 1：有人達到目標分數，且領先對方至少 2 分 (例如 11:9, 21:19)
+        // 條件 2：如果一直平手（Deuce），直到有人先拿到 30 分 (羽球上限規則)
+        const winA = (nA >= t && nA - nB >= 2) || (nA === 30);
+        const winB = (nB >= t && nB - nA >= 2) || (nB === 30);
+
+        const win = winA || winB;
+
         await updateDoc(ref, { 
             scoreA: nA, 
             scoreB: nB, 
