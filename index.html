@@ -167,8 +167,15 @@
             <input type="text" id="admin-img-url" placeholder="賽程圖網址">
             <button class="btn btn-primary" style="width:100%;" onclick="publishNotice()">發布</button>
             <hr>
-            <h4>2. 全場初始化</h4>
-            <button class="btn btn-secondary" style="width:100%;" onclick="updateAllCourtsRule()">套用並初始化所有場地</button>
+            <h4>2. 全場分數規則</h4>
+            <select id="rule-score-target" style="width:100%; margin-bottom:10px;">
+                <option value="11" selected>11 分制</option>
+                <option value="15">15 分制</option>
+                <option value="21">21 分制</option>
+                <option value="25">25 分制</option>
+                <option value="31">31 分制</option>
+            </select>
+            <button class="btn btn-secondary" style="width:100%;" onclick="updateAllCourtsRule()">套用全場</button>
             <hr>
             <h4>3. 全域局數設定</h4>
             <select id="admin-global-sets">
@@ -410,3 +417,4 @@
 </script>
 </body>
 </html>
+
