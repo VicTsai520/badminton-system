@@ -8,18 +8,30 @@
     <style>
         :root { --bg-color: #f0f7f4; --primary: #4ecdc4; --secondary: #ff6b6b; --accent: #ffe66d; --text-main: #2f3e46; --card-bg: #ffffff; }
         body { font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; overflow-x: hidden; }
+        /*頁面切換核心*/
         .page { display: none; min-height: 100vh; padding: 20px; box-sizing: border-box; flex-direction: column; align-items: center; }
         .active-page { display: flex !important; }
+        /*按鈕樣式*/
         .btn { padding: 16px 30px; border-radius: 50px; border: none; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: inline-block; text-decoration: none; text-align: center; position: relative; top: 0; }
+        /* 懸停效果：向上浮起、陰影加深 */
         .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        /* 點擊瞬間效果：向下凹陷、縮小 */
         .btn:active { transform: translateY(1px) scale(0.96); box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.1s; }
         .btn-primary { background: linear-gradient(135deg, #4ecdc4 0%, #3bb3ab 100%); color: white; box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3); }
+        /* 滑鼠移過去後，漸層反轉並加深，產生「亮起」的感覺 */
+        .btn-primary:hover { background: linear-gradient(135deg, #3bb3ab 0%, #2d8d87 100%); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(78, 205, 196, 0.4); }
+        /* 2. 選手/觀眾大廳：維持外框感但加強 Hover */
         .btn-outline { background: white; border: 2px solid #4ecdc4; color: #3bb3ab; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        /* 移過去時填滿顏色，增加互動驚喜 */
         .btn-outline:hover { background-color: #4ecdc4; color: white; }
         .btn-secondary { background: linear-gradient(135deg, #ff6b6b 0%, #ee5253 100%); color: white; }
         .btn-gray { background-color: #95a5a6; color: white; }
+        /* 懸停時稍微變深 */
+        .btn-gray:hover { background-color: #7f8c8d; }
+        /* 圖片放大檢視器的關閉按鈕互動 */
+        #image-viewer span:hover { color: var(--secondary); transform: scale(1.2); transition: 0.2s; }
         .live-dot { width: 12px; height: 12px; background-color: #ff6b6b; border-radius: 50%; margin-right: 12px; display: inline-block; animation: live-breathe 1.5s infinite ease-in-out; box-shadow: 0 0 8px rgba(255, 107, 107, 0.6); }
-        @keyframes live-breathe { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.7; } }
+        @keyframes live-breathe { 0% {transform: scale(1); opacity: 1; box-shadow: 0 0 0px rgba(255, 107, 107, 0.4); } 50% { transform: scale(1.3); opacity: 0.7; box-shadow: 0 0 15px rgba(255, 107, 107, 0.9); } 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0px rgba(255, 107, 107, 0.4); } }
         .court-btn { padding: 25px; border-radius: 20px; border: 2px solid #eee; background: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: all 0.3s ease; }
         .court-btn:hover { border-color: var(--primary); transform: scale(1.02); }
         .back-fab { position: fixed; right: 20px; bottom: 20px; width: 65px; height: 65px; background: var(--secondary); color: white; border-radius: 50%; display: none; justify-content: center; align-items: center; z-index: 999; border: none; box-shadow: 0 4px 15px rgba(255,107,107,0.4); font-size: 0.95rem; font-weight: bold; cursor: pointer; }
@@ -417,4 +429,5 @@
 </script>
 </body>
 </html>
+
 
