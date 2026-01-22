@@ -471,13 +471,13 @@
                 const isReady = (d.nameA === "準備中");
                 const target = d.targetScore || 11;
 
-                // 1. 計算賽點邏輯 (領先且達到 target-1)
-                const isGPA = (d.scoreA >= target - 1 && d.scoreA > d.scoreB);
-                const isGPB = (d.scoreB >= target - 1 && d.scoreB > d.scoreA);
+                // --- 修改後的邏輯：只要任一方到達賽點，全體變紅 ---
+                // 判斷是否有人處於賽點 (分數 >= 目標-1)
+                const isAnyGamePoint = (d.scoreA >= target - 1 || d.scoreB >= target - 1);
                 
-                // 2. 決定顏色：賽點用紅色 (--secondary)，一般用主色 (--primary)
-                const colorA = isGPA ? "var(--secondary)" : "var(--primary)";
-                const colorB = isGPB ? "var(--secondary)" : "var(--primary)";
+                // 只要進入賽點，兩邊顏色都套用紅色 (--secondary)，否則維持主色 (--primary)
+                const finalColor = isAnyGamePoint ? "var(--secondary)" : "var(--primary)";
+                // ----------------------------------------------
 
                 card.innerHTML = `
                     <div style="flex:1">
@@ -486,9 +486,9 @@
                     </div>
                     <div style="text-align:right">
                         <div style="font-size:1.5rem; font-weight:900; display: flex; align-items: center; justify-content: flex-end;">
-                            <span style="color:${colorA}">${d.scoreA}</span>
-                            <span style="color:var(--primary); opacity:0.6; margin: 0 4px;">:</span>
-                            <span style="color:${colorB}">${d.scoreB}</span>
+                            <span style="color:${finalColor}">${d.scoreA}</span>
+                            <span style="color:var(--primary); opacity:0.4; margin: 0 4px;">:</span>
+                            <span style="color:${finalColor}">${d.scoreB}</span>
                         </div>
                         <div style="font-size:0.7rem; background:#2f3e46; color:white; padding:2px 5px; border-radius:4px; display:inline-block;">
                             ${isReady ? 'READY' : 'SETS '+ (d.setsA||0)+':'+(d.setsB||0)}
@@ -497,7 +497,6 @@
                 
                 card.style.opacity = isReady ? "0.6" : "1";
                 
-                // 同步更新選場地按鈕的邊框顏色
                 const btn = document.getElementById(`court-btn-${id}`);
                 if(btn) btn.style.borderColor = isReady ? "#eee" : "var(--secondary)";
             }
