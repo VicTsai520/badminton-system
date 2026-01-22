@@ -251,6 +251,7 @@
     // 選場地邏輯
     window.selectCourt = async (id) => {
         currentCourt = id;
+        listenToCourt(id);
         const ref = doc(db, "games", id);
         const snap = await getDoc(ref);
         
