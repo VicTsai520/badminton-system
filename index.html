@@ -251,7 +251,43 @@
         document.getElementById('global-back-btn').style.display = (id === 'home-page') ? 'none' : 'flex';
     };
 
-    window.smartBack = () => showPage('home-page');
+    window.smartBack = () => {
+        // 取得目前畫面上帶有 active-page 類別的頁面 ID
+        const currentPage = document.querySelector('.page.active-page')?.id;
+
+        switch (currentPage) {
+            case 'staff-verify-page': // 工作人員登入頁
+                showPage('home-page');
+                break;
+                
+            case 'staff-select-page': // 裁判登記頁
+                showPage('staff-verify-page');
+                break;
+                
+            case 'court-selection-page': // 選擇計分場地頁
+                showPage('staff-select-page');
+                break;
+
+            case 'pre-game-page': // 場地設定頁
+                showPage('court-selection-page');
+                break;
+
+            case 'scoring-page': // 計分頁
+                if(confirm("比賽正在進行中，確定要結束計分並返回場地選擇嗎？")) {
+                    showPage('court-selection-page');
+                }
+                break;
+
+            case 'player-hub-page': // 選手/觀眾大廳
+            case 'admin-master-page': // 管理後台
+                showPage('home-page');
+                break;
+
+            default:
+                showPage('home-page');
+                break;
+        }
+    };
     window.verifyStaff = () => { if(document.getElementById('staff-pass').value === '0000') showPage('staff-select-page'); else alert('密碼錯誤'); };
     window.adminLogin = () => { if(prompt("管理密碼") === '9999') showPage('admin-master-page'); };
 
