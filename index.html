@@ -309,7 +309,7 @@
             // 如果選單選「manual」就用手動輸入的值，否則用選單的值
             return (sel === 'manual') ? (manual || `自定義選手 ${teamId}`) : (sel || `${teamId} 隊`);
         };
-        
+
         const nA = document.getElementById('teamA-names').value || "A 隊";
         const nB = document.getElementById('teamB-names').value || "B 隊";
         const target = parseInt(document.getElementById('target-score-select').value);
@@ -525,22 +525,20 @@
                 card.innerHTML = `
                     <div style="flex:1; display: flex; flex-direction: column; justify-content: center;">
                         <div style="font-size:0.75rem; color:#888; margin-bottom: 2px;">場地 ${id}</div>
-                        <div style="font-weight:bold; font-size:1rem; color:var(--text-main);">
-                            ${d.nameA} ${isReady ? '' : 'vs ' + d.nameB}
-                        </div>
+                        <div style="font-weight:bold; font-size:1rem; color:var(--text-main);">${d.nameA} ${isReady ? '' : 'vs ' + d.nameB}</div>
                         <div style="font-size: 1.1rem; font-weight: 800; color: #555; margin-top: 4px;">
-                            ${isReady ? 'READY' : setsScoreText}
+                            ${isReady ? 'READY' : (d.setsA || 0) + ' : ' + (d.setsB || 0)}
                         </div>
                     </div>
-                    <div style="text-align:right; display: flex; align-items: center;">
-                        <div style="font-size:1.8rem; font-weight:900; display: flex; align-items: center;">
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
+                        <div style="font-size:1.8rem; font-weight:900; display: flex; align-items: center; line-height: 1;">
                             <span style="color:${scoreColor}">${d.scoreA}</span>
                             <span style="color:#ccc; margin: 0 6px; font-size: 1.2rem;">:</span>
                             <span style="color:${scoreColor}">${d.scoreB}</span>
                         </div>
-                        <div style="font-size: 0.65rem; color: #999; margin-top: 6px; font-weight: 500;">
-                        ${isReady ? '' : '裁判: ' + (d.judgeName || '無')}
-                    </div>
+                        <div style="font-size: 0.65rem; color: #999; margin-top: 4px; white-space: nowrap;">
+                            ${isReady ? '' : '裁判: ' + (d.judgeName || '無')}
+                        </div>
                     </div>`;
                 
                 card.style.opacity = isReady ? "0.6" : "1";
