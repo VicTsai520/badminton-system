@@ -463,19 +463,35 @@
             if(snap.exists()){
                 const d = snap.data();
                 const isReady = (d.nameA === "準備中");
+                const target = d.targetScore || 11;
+
+                // --- 新增：大廳專用的賽點變色判斷 ---
+                const isGPA = (d.scoreA >= target - 1 && d.scoreA > d.scoreB);
+                const isGPB = (d.scoreB >= target - 1 && d.scoreB > d.scoreA);
+                
+                // 根據賽點狀態決定分數顏色
+                const colorA = isGPA ? "var(--secondary)" : "var(--primary)";
+                const colorB = isGPB ? "var(--secondary)" : "var(--primary)";
+                // ----------------------------------
+
                 card.innerHTML = `
                     <div style="flex:1">
                         <div style="font-size:0.75rem; color:#888;">場地 ${id}</div>
                         <div style="font-weight:bold;">${d.nameA} ${isReady ? '' : 'vs ' + d.nameB}</div>
                     </div>
                     <div style="text-align:right">
-                        <div style="font-size:1.5rem; font-weight:900; color:var(--primary);">${d.scoreA}:${d.scoreB}</div>
-                        <div style="font-size:0.7rem; background:#2f3e46; color:white; padding:2px 5px; border-radius:4px;">${isReady ? 'READY' : 'SETS '+ (d.setsA||0)+':'+(d.setsB||0)}</div>
+                        <div style="font-size:1.5rem; font-weight:900;">
+                            <span style="color:${colorA}">${d.scoreA}</span>:<span style="color:${colorB}">${d.scoreB}</span>
+                        </div>
+                        <div style="font-size:0.7rem; background:#2f3e46; color:white; padding:2px 5px; border-radius:4px;">
+                            ${isReady ? 'READY' : 'SETS '+ (d.setsA||0)+':'+(d.setsB||0)}
+                        </div>
                     </div>`;
                 card.style.opacity = isReady ? "0.6" : "1";
+                
                 const btn = document.getElementById(`court-btn-${id}`);
                 if(btn) btn.style.borderColor = isReady ? "#eee" : "var(--secondary)";
-            }
+                }
         });
     });
 </script>
