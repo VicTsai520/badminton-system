@@ -483,27 +483,28 @@
                 const isReady = (d.nameA === "準備中");
                 const target = d.targetScore || 11;
 
-                // --- 修改後的邏輯：只要任一方到達賽點，全體變紅 ---
-                // 判斷是否有人處於賽點 (分數 >= 目標-1)
-                const isAnyGamePoint = (d.scoreA >= target - 1 || d.scoreB >= target - 1);
-                
-                // 只要進入賽點，兩邊顏色都套用紅色 (--secondary)，否則維持主色 (--primary)
-                const finalColor = isAnyGamePoint ? "var(--secondary)" : "var(--primary)";
-                // ----------------------------------------------
+                // 1. 賽點變色邏輯 (任一方達標則兩邊變紅)
+                const isAnyGP = (d.scoreA >= target - 1 || d.scoreB >= target - 1);
+                const scoreColor = isAnyGP ? "var(--secondary)" : "var(--primary)";
+
+                // 2. 局數比字串 (只顯示數字比分，不加 Sets 字樣)
+                const setsScoreText = `${d.setsA || 0} : ${d.setsB || 0}`;
 
                 card.innerHTML = `
-                    <div style="flex:1">
-                        <div style="font-size:0.75rem; color:#888;">場地 ${id}</div>
-                        <div style="font-weight:bold;">${d.nameA} ${isReady ? '' : 'vs ' + d.nameB}</div>
-                    </div>
-                    <div style="text-align:right">
-                        <div style="font-size:1.5rem; font-weight:900; display: flex; align-items: center; justify-content: flex-end;">
-                            <span style="color:${finalColor}">${d.scoreA}</span>
-                            <span style="color:#ccc; opacity:0.4; margin: 0 4px;">:</span>
-                            <span style="color:${finalColor}">${d.scoreB}</span>
+                    <div style="flex:1; display: flex; flex-direction: column; justify-content: center;">
+                        <div style="font-size:0.75rem; color:#888; margin-bottom: 2px;">場地 ${id}</div>
+                        <div style="font-weight:bold; font-size:1rem; color:var(--text-main);">
+                            ${d.nameA} ${isReady ? '' : 'vs ' + d.nameB}
                         </div>
-                        <div style="font-size:0.7rem; background:#2f3e46; color:white; padding:2px 5px; border-radius:4px; display:inline-block;">
-                            ${isReady ? 'READY' : 'SETS '+ (d.setsA||0)+':'+(d.setsB||0)}
+                        <div style="font-size: 1.1rem; font-weight: 800; color: #555; margin-top: 4px;">
+                            ${isReady ? 'READY' : setsScoreText}
+                        </div>
+                    </div>
+                    <div style="text-align:right; display: flex; align-items: center;">
+                        <div style="font-size:1.8rem; font-weight:900; display: flex; align-items: center;">
+                            <span style="color:${scoreColor}">${d.scoreA}</span>
+                            <span style="color:#ccc; margin: 0 6px; font-size: 1.2rem;">:</span>
+                            <span style="color:${scoreColor}">${d.scoreB}</span>
                         </div>
                     </div>`;
                 
