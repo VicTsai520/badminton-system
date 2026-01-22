@@ -307,6 +307,24 @@
             if (snap.exists() && currentCourt === id) {
                 const d = snap.data();
                 const target = d.targetScore || 11;
+                // 1. 取得分數元素
+                const scoreAEl = document.getElementById('score-A');
+                const scoreBEl = document.getElementById('score-B');
+                
+                // 2. 更新分數數字
+                scoreAEl.innerText = d.scoreA;
+                scoreBEl.innerText = d.scoreB;
+                
+                // --- 新增：變色邏輯 (Game Point 變紅) ---
+                // 判斷 A 是否為賽點：分數 >= target-1 且領先 B
+                const isGamePointA = (d.scoreA >= target - 1 && d.scoreA > d.scoreB);
+                // 判斷 B 是否為賽點：分數 >= target-1 且領先 A
+                const isGamePointB = (d.scoreB >= target - 1 && d.scoreB > d.scoreA);
+                
+                // 設定顏色：賽點變紅色 (--secondary)，否則維持深色 (--text-main)
+                scoreAEl.style.color = isGamePointA ? "var(--secondary)" : "var(--text-main)";
+                scoreBEl.style.color = isGamePointB ? "var(--secondary)" : "var(--text-main)";
+                // ---------------------------------------
                 document.getElementById('score-A').innerText = d.scoreA;
                 document.getElementById('score-B').innerText = d.scoreB;
                 document.getElementById('display-nameA').innerText = d.nameA;
