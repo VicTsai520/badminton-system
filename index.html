@@ -110,12 +110,13 @@
             <div style="text-align:center; margin:10px 0; font-weight:bold; opacity:0.5;">VS</div>
             <label>隊伍 B</label><input type="text" id="teamB-names" placeholder="選手名稱">
             
-            <label style="margin-top:15px; display:block;">本場分數</label>
-            <select id="target-score-select" onchange="updatePreGameTitle()">
-                <option value="11" selected>11 分制</option>
-                <option value="21">21 分制</option>
-                <option value="31">31 分制</option>
-            </select>
+            <div class="input-group">
+                <label>目前比賽規則</label>
+                <div id="current-rule-display" style="background: #eee; padding: 12px; border-radius: 12px; text-align: center; font-weight: bold; color: var(--text-main);">
+                    載入規則中...
+                </div>
+                <input type="hidden" id="target-score-select" value="11">
+            </div>
             
             <button class="btn btn-primary" style="width:100%; margin-top:20px;" onclick="startMatch()">開始比賽</button>
         </div>
@@ -240,22 +241,28 @@
     // 選場地邏輯
     window.selectCourt = async (id) => {
         currentCourt = id;
-        try {
-            const ref = doc(db, "games", id);
-            const snap = await getDoc(ref);
-            if(!snap.exists()) {
-                await setDoc(ref, { nameA: "準備中", nameB: "準備中", scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, currentSet: 1, isWaitingNext: false });
+        const ref = doc(db, "games", id);
+        const snap = await getDoc(ref);
+        
+        if(snap.exists() && snap.data().nameA !== "準備中") {
+            showPage('scoring-page');
+        } else {
+            // 1. 抓取後台全域設定
+            const configSnap = await getDoc(doc(db, "config", "match_settings"));
+            const globalSets = configSnap.exists() ? configSnap.data().defaultTotalSets : 3;
+            const globalScore = snap.exists() ? (snap.data().targetScore || 11) : 11;
+
+            // 2. 更新隱藏的數值與顯示文字
+            document.getElementById('target-score-select').value = globalScore;
+            document.getElementById('current-rule-display').innerText = `${globalScore} 分制`;
+
+            // 3. 更新標題 (場地 X 設定...)
+            const titleEl = document.getElementById('pre-game-title');
+            if(titleEl) {
+                titleEl.innerText = `場地 ${id} 設定 (${globalSets} 局定勝負, ${globalScore} 分制)`;
             }
-            const d = (await getDoc(ref)).data();
-            if(d.nameA !== "準備中") {
-                showPage('scoring-page');
-            } else {
-                await updatePreGameTitle();
-                showPage('pre-game-page');
-            }
-            listenToCourt(id);
-        } catch (e) {
-            alert("連線失敗，請檢查權限");
+            
+            showPage('pre-game-page');
         }
     };
 
@@ -373,9 +380,25 @@
     };
 
     window.updateAllCourtsRule = async () => {
-        const ps = courtList.map(id => setDoc(doc(db, "games", id), { nameA: "準備中", nameB: "準備中", scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, currentSet: 1, isWaitingNext: false }));
-        await Promise.all(ps);
-        alert("初始化完成");
+        const targetScore = parseInt(document.getElementById('rule-score-target').value);
+        const courtList = ["1", "2", "3", "4", "5", "6"];
+        
+        try {
+            const promises = courtList.map(id => 
+                updateDoc(doc(db, "games", id), { targetScore: targetScore })
+            );
+            await Promise.all(promises);
+            
+            // 同時存入 config，讓以後新開的比賽也能抓到預設值
+            await setDoc(doc(db, "config", "match_settings"), { 
+                defaultTargetScore: targetScore 
+            }, { merge: true });
+
+            alert(`✅ 已成功將全場分數統一設定為 ${targetScore} 分制`);
+        } catch (e) {
+            console.error(e);
+            alert("❌ 套用失敗，請檢查資料庫權限");
+        }
     };
 
     window.publishNotice = async () => {
@@ -429,5 +452,4 @@
 </script>
 </body>
 </html>
-
 
