@@ -251,47 +251,7 @@
         document.getElementById('global-back-btn').style.display = (id === 'home-page') ? 'none' : 'flex';
     };
 
-    window.smartBack = () => {
-        // 取得目前正在顯示的頁面 ID
-        const currentPage = Array.from(document.querySelectorAll('.page'))
-                                .find(p => p.style.display === 'block')?.id;
-
-        switch (currentPage) {
-            case 'scoring-page':
-                // 如果在計分中，按返回應先確認是否結束比賽，或回到預備頁
-                if(confirm("比賽尚未結束，確定要返回設定頁嗎？")) {
-                    showPage('pre-game-page');
-                }
-                break;
-            case 'pre-game-page':
-                // 準備比賽頁 -> 回到場地選擇頁
-                showPage('court-select-page');
-                break;
-            case 'court-select-page':
-            case 'login-page':
-                // 場地選擇或登入頁 -> 回到賽事大廳
-                showPage('hub-page');
-                break;
-            default:
-                // 其他情況（如已經在大廳）則不動作，或回到大廳
-                showPage('hub-page');
-                break;
-        }
-    };
-    window.showPage = (pageId) => {
-        // 隱藏所有頁面
-        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-        
-        // 顯示目標頁面
-        const target = document.getElementById(pageId);
-        if(target) target.style.display = 'block';
-
-        // 控制返回按鈕：如果在 hub-page 則隱藏，其他頁面則顯示
-        const backBtn = document.getElementById('global-back-btn');
-        if(backBtn) {
-            backBtn.style.display = (pageId === 'hub-page') ? 'none' : 'flex';
-        }
-    };
+    window.smartBack = () => showPage('home-page');
     window.verifyStaff = () => { if(document.getElementById('staff-pass').value === '0000') showPage('staff-select-page'); else alert('密碼錯誤'); };
     window.adminLogin = () => { if(prompt("管理密碼") === '9999') showPage('admin-master-page'); };
 
@@ -597,4 +557,3 @@
 </script>
 </body>
 </html>
-
