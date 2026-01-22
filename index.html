@@ -459,20 +459,25 @@
         onSnapshot(doc(db, "games", id), (snap) => {
             const grid = document.getElementById('live-scoreboard-grid');
             let card = document.getElementById(`hub-card-${id}`);
-            if(!card) { card = document.createElement('div'); card.id = `hub-card-${id}`; card.className = 'hub-card'; grid.appendChild(card); }
+            if(!card) { 
+                card = document.createElement('div'); 
+                card.id = `hub-card-${id}`; 
+                card.className = 'hub-card'; 
+                grid.appendChild(card); 
+            }
+
             if(snap.exists()){
                 const d = snap.data();
                 const isReady = (d.nameA === "準備中");
                 const target = d.targetScore || 11;
 
-                // --- 新增：大廳專用的賽點變色判斷 ---
+                // 1. 計算賽點邏輯 (領先且達到 target-1)
                 const isGPA = (d.scoreA >= target - 1 && d.scoreA > d.scoreB);
                 const isGPB = (d.scoreB >= target - 1 && d.scoreB > d.scoreA);
                 
-                // 根據賽點狀態決定分數顏色
+                // 2. 決定顏色：賽點用紅色 (--secondary)，一般用主色 (--primary)
                 const colorA = isGPA ? "var(--secondary)" : "var(--primary)";
                 const colorB = isGPB ? "var(--secondary)" : "var(--primary)";
-                // ----------------------------------
 
                 card.innerHTML = `
                     <div style="flex:1">
@@ -480,18 +485,22 @@
                         <div style="font-weight:bold;">${d.nameA} ${isReady ? '' : 'vs ' + d.nameB}</div>
                     </div>
                     <div style="text-align:right">
-                        <div style="font-size:1.5rem; font-weight:900;">
-                            <span style="color:${colorA}">${d.scoreA}</span>:<span style="color:${colorB}">${d.scoreB}</span>
+                        <div style="font-size:1.5rem; font-weight:900; display: flex; align-items: center; justify-content: flex-end;">
+                            <span style="color:${colorA}">${d.scoreA}</span>
+                            <span style="color:var(--primary); opacity:0.6; margin: 0 4px;">:</span>
+                            <span style="color:${colorB}">${d.scoreB}</span>
                         </div>
-                        <div style="font-size:0.7rem; background:#2f3e46; color:white; padding:2px 5px; border-radius:4px;">
+                        <div style="font-size:0.7rem; background:#2f3e46; color:white; padding:2px 5px; border-radius:4px; display:inline-block;">
                             ${isReady ? 'READY' : 'SETS '+ (d.setsA||0)+':'+(d.setsB||0)}
                         </div>
                     </div>`;
+                
                 card.style.opacity = isReady ? "0.6" : "1";
                 
+                // 同步更新選場地按鈕的邊框顏色
                 const btn = document.getElementById(`court-btn-${id}`);
                 if(btn) btn.style.borderColor = isReady ? "#eee" : "var(--secondary)";
-                }
+            }
         });
     });
 </script>
