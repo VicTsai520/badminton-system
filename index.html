@@ -530,13 +530,14 @@
                             ${isReady ? 'READY' : (d.setsA || 0) + ' : ' + (d.setsB || 0)}
                         </div>
                     </div>
-                    <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
+
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 80px;">
                         <div style="font-size:1.8rem; font-weight:900; display: flex; align-items: center; line-height: 1;">
                             <span style="color:${scoreColor}">${d.scoreA}</span>
                             <span style="color:#ccc; margin: 0 6px; font-size: 1.2rem;">:</span>
                             <span style="color:${scoreColor}">${d.scoreB}</span>
                         </div>
-                        <div style="font-size: 0.65rem; color: #999; margin-top: 4px; white-space: nowrap;">
+                        <div style="font-size: 0.65rem; color: #999; margin-top: 5px; white-space: nowrap; text-align: center;">
                             ${isReady ? '' : '裁判: ' + (d.judgeName || '無')}
                         </div>
                     </div>`;
