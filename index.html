@@ -446,11 +446,23 @@
             const d = snap.data();
             if(d.homeImg) document.getElementById('home-logo-display').innerHTML = `<img src="${d.homeImg}" style="max-height:180px;">`;
             document.getElementById('announcement-text').innerText = d.content || "歡迎參加比賽";
+            
+            const sImg = document.getElementById('schedule-img-display');
             if(d.imgUrl) { 
-                const sImg = document.getElementById('schedule-img-display');
-                sImg.src = d.imgUrl; sImg.style.display = 'block';
-                sImg.onclick = () => { document.getElementById('full-size-image').src = d.imgUrl; document.getElementById('image-viewer').style.display = 'flex'; };
+                sImg.src = d.imgUrl; 
+                // 修改重點：強制圖片顯示為 block 並透過 margin 置中
+                sImg.style.cssText = "display: block; max-width: 95%; max-height: 400px; border-radius: 12px; cursor: zoom-in; margin: 15px auto 0 auto;";
+                
+                sImg.onclick = () => { 
+                    document.getElementById('full-size-image').src = d.imgUrl; 
+                    document.getElementById('image-viewer').style.display = 'flex'; 
+                };
                 document.getElementById('zoom-hint').style.display = 'block';
+                // 確保提示文字也置中
+                document.getElementById('zoom-hint').style.textAlign = 'center';
+            } else {
+                sImg.style.display = 'none';
+                document.getElementById('zoom-hint').style.display = 'none';
             }
         }
     });
