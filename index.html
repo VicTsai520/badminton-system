@@ -343,7 +343,10 @@
             const sel = document.getElementById(`team${teamId}-names`).value;
             const manual = document.getElementById(`team${teamId}-manual`).value;
             // 如果選單選「manual」就用手動輸入的值，否則用選單的值
-            return (sel === 'manual') ? (manual || `自定義選手 ${teamId}`) : (sel || `${teamId} 隊`);
+            if (sel === 'manual') {
+                return manual || `選手 ${teamId}`; // 若手動框也沒寫，給予預設稱呼
+            }
+            return sel || `${teamId} 隊`;
         };
 
         const nA = document.getElementById('teamA-names').value || "A 隊";
@@ -491,10 +494,13 @@
     window.checkManualName = (team) => {
         const sel = document.getElementById(`team${team}-names`);
         const manualInput = document.getElementById(`team${team}-manual`);
-        if (sel.value === 'manual') {
-            manualInput.style.display = 'block';
-        } else {
-            manualInput.style.display = 'none';
+        if (sel && manualInput) {
+            if (sel.value === 'manual') {
+                manualInput.style.display = 'block';
+                manualInput.focus(); // 自動聚焦方便輸入
+            } else {
+                manualInput.style.display = 'none';
+            }
         }
     };
 
