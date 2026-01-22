@@ -110,9 +110,19 @@
             <div style="text-align:center; margin:10px 0; font-weight:bold; opacity:0.5;">VS</div>
             <label>隊伍 B</label><input type="text" id="teamB-names" placeholder="選手名稱">
             
-            <div class="input-group">
-                <label>目前比賽規則</label>
-                <div id="current-rule-display" style="background: #eee; padding: 12px; border-radius: 12px; text-align: center; font-weight: bold; color: var(--text-main);">
+            <div class="input-group" style="margin-top: 30px; margin-bottom: 30px;"> 
+                <label style="margin-bottom: 12px; display: block;">目前比賽規則</label>
+                <div id="current-rule-display" style="
+                    background: #f8f9fa; 
+                    padding: 18px; 
+                    border-radius: 15px; 
+                    text-align: center; 
+                    font-weight: bold; 
+                    color: var(--text-main);
+                    border: 1px solid #eee;
+                    font-size: 1.2rem;
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+                ">
                     載入規則中...
                 </div>
                 <input type="hidden" id="target-score-select" value="11">
