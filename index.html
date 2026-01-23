@@ -312,7 +312,7 @@
                 const data = snap.data();
                 // 如果場地已有裁判，且該裁判不是你目前登入的姓名，且該場地不是「準備中」
                 if (data.judgeName && data.judgeName !== "無" && data.judgeName !== loggedJudge && data.nameA !== "準備中") {
-                    const proceed = confirm(`警報：${data.judgeName} 裁判正在此場地計分中！\n您確定要強行取代他嗎？`);
+                    const proceed = confirm(`警報：\n${data.judgeName} 裁判正在此場地計分中！\n您確定要取代他嗎？`);
                     if (!proceed) return; // 點選取消則停留在原頁面
                 }
             }
@@ -615,7 +615,7 @@
                             ${isReady ? 
                                 '<span style="color: #999;">待機中</span>' : 
                                 (d.judgeName && d.judgeName !== "無" ? 
-                                    `<span style="color: #ff6b6b; font-weight: bold; background: #fff0f0; padding: 2px 6px; border-radius: 4px; border: 1px solid #ffcfcf;">● ${d.judgeName} 計分中</span>` : 
+                                    `<span style="color: #ff6b6b; font-weight: bold; background: #fff0f0; padding: 2px 6px; border-radius: 4px; border: 1px solid #ffcfcf;">● ${d.judgeName} 裁判</span>` : 
                                     '<span style="color: #999;">裁判: 無</span>'
                                 )
                             }
