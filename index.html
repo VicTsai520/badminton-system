@@ -581,36 +581,34 @@
                 const isReady = (d.nameA === "準備中");
                 const target = d.targetScore || 11;
 
-                // 1. 賽點變色邏輯 (任一方達標則兩邊變紅)
+                // --- 1. 定義變數 (包含您提到的局數比) ---
                 const isAnyGP = (d.scoreA >= target - 1 || d.scoreB >= target - 1);
                 const scoreColor = isAnyGP ? "var(--secondary)" : "var(--primary)";
-
-                // 2. 局數比字串 (只顯示數字比分，不加 Sets 字樣)
+                
+                // 重新加入這行，確保代碼整潔
                 const setsScoreText = `${d.setsA || 0} : ${d.setsB || 0}`;
 
+                // --- 2. 更新「LIVE賽事大廳」卡片 ---
                 card.innerHTML = `
                     <div style="flex:1; display: flex; flex-direction: column; justify-content: space-between; padding-right: 10px;">
                         <div style="font-size:0.75rem; color:#888;">場地 ${id}</div>
-                        
                         <div style="font-weight:bold; font-size:1.15rem; color:var(--text-main); margin: 2px 0;">
                             ${d.nameA} ${isReady ? '' : '<span style="font-size:0.8rem; color:#999; margin:0 4px;">vs</span> ' + d.nameB}
                         </div>
-
                         <div style="font-size: 1rem; font-weight: 800; color: #555; height: 1.5rem; display: flex; align-items: center;">
                             ${isReady ? 
                                 '<span style="font-size:0.9rem; color:#bbb;">READY</span>' : 
-                                '<span style="font-size:0.8rem; color:#999; margin-right:5px; font-weight:normal;">局數比:</span>' + (d.setsA || 0) + ' : ' + (d.setsB || 0)
+                                `<span style="font-size:0.8rem; color:#999; margin-right:5px; font-weight:normal;">局數比:</span>${setsScoreText}`
                             }
                         </div>
                     </div>
-
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-width: 100px; border-left: 1px solid #f0f0f0; padding-left: 10px;">
-                        <div style="height: 0.75rem;"></div> <div style="font-size:1.9rem; font-weight:900; display: flex; align-items: center; line-height: 1.2;">
+                        <div style="height: 0.75rem;"></div> 
+                        <div style="font-size:1.9rem; font-weight:900; display: flex; align-items: center; line-height: 1.2;">
                             <span style="color:${scoreColor}">${d.scoreA}</span>
                             <span style="color:#ccc; margin: 0 6px; font-size: 1.3rem;">:</span>
                             <span style="color:${scoreColor}">${d.scoreB}</span>
                         </div>
-                        
                         <div style="font-size: 0.7rem; color: #999; height: 1.5rem; display: flex; align-items: center; white-space: nowrap;">
                             ${isReady ? 
                                 '<span style="color: #999;">待機中</span>' : 
@@ -621,19 +619,15 @@
                             }
                         </div>
                     </div>`;
-                
                 card.style.opacity = isReady ? "0.6" : "1";
-                
-                // --- 這裡開始替換 ---
+
+                // --- 3. 更新「選擇場地頁面」按鈕 (獨立邏輯，不干涉大廳) ---
                 const selBtn = document.getElementById(`court-selection-btn-${id}`);
                 if (selBtn) {
-                    const isReady = d.nameA === "準備中";
-                    // 1. 定義裁判狀態文字
-                    const judgeStatus = (d.judgeName && d.judgeName !== "無") 
+                    const btnJudgeStatus = (d.judgeName && d.judgeName !== "無") 
                         ? `<div style="font-size:0.75rem; color:#ff6b6b; margin-top:4px; font-weight:bold;">● ${d.judgeName} 使用中</div>` 
                         : `<div style="font-size:0.75rem; color:#999; margin-top:4px;">(尚未有裁判使用)</div>`;
 
-                    // 2. 渲染按鈕 HTML (包含場地號碼、狀態、以及裁判名)
                     selBtn.innerHTML = `
                         <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
                             <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
@@ -642,11 +636,10 @@
                                     ${isReady ? '待機中' : '比賽中'}
                                 </span>
                             </div>
-                            ${judgeStatus}
+                            ${btnJudgeStatus}
                         </div>
                     `;
                 }
-                // --- 替換結束，請確保後面沒有重複的 selBtn 指令 ---
             }
         });
     });
