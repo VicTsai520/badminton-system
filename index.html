@@ -77,7 +77,7 @@
     <div id="staff-select-page" class="page">
         <h2>裁判登記</h2>
         <div class="admin-box">
-            <select id="staff-name-list">
+            <select id="staff-name-list" onchange="checkManualName('staff')">
                 <option value="">-- 請選擇您的姓名 --</option>
                 <option value="Vic">Vic</option>
                 <option value="Howard">Howard</option> 
@@ -488,13 +488,24 @@
             alert("❌ 套用失敗，請檢查資料庫權限");
         }
     };
-    window.checkManualName = (team) => {
-        const sel = document.getElementById(`team${team}-names`);
-        const manualInput = document.getElementById(`team${team}-manual`);
-        if (sel.value === 'manual') {
-            manualInput.style.display = 'block';
+    window.checkManualName = (type) => {
+        let sel, manualInput;
+        
+        if (type === 'staff') {
+            // 裁判登記頁面的 ID
+            sel = document.getElementById('staff-name-list');
+            manualInput = document.getElementById('staff-name-manual');
         } else {
-            manualInput.style.display = 'none';
+            // 選手選擇頁面的 ID (A 或 B)
+            sel = document.getElementById(`team${type}-names`);
+            manualInput = document.getElementById(`team${type}-manual`);
+        }
+        
+        if (sel && manualInput) {
+            // 裁判選「其他」或選手選「manual」時顯示
+            const isManual = (sel.value === '其他' || sel.value === 'manual');
+            manualInput.style.display = isManual ? 'block' : 'none';
+            if (isManual) manualInput.focus();
         }
     };
 
