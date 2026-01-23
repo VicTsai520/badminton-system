@@ -360,8 +360,8 @@
     window.startMatch = async () => {
         // --- 這裡就是你問的那段邏輯，直接整合進來了 ---
         const getFinalName = (teamId) => {
-            const sel = document.getElementById(`team${teamId}-names`).value;
-            const manual = document.getElementById(`team${teamId}-manual`).value;
+            const sel = document.getElementById(`team${teamId}-names`);
+            const manual = document.getElementById(`team${teamId}-manual`);
 
             // 如果選單選「manual」就用手動輸入的值，否則用選單的值
             if (selValue === 'manual') {
