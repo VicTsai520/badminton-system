@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -489,44 +490,8 @@
 
     window.clearCourtData = async (auto = false) => {
         if(auto || confirm("確定清空場地？")) {
-            try {
-                // 1. 更新資料庫
-                await setDoc(doc(db, "games", currentCourt), { 
-                    nameA: "準備中", 
-                    nameB: "準備中", 
-                    scoreA: 0, 
-                    scoreB: 0, 
-                    setsA: 0, 
-                    setsB: 0, 
-                    currentSet: 1, 
-                    judgeName: "無", 
-                    history: [], 
-                    isWaitingNext: false, 
-                    server: 'A' 
-                });
-
-                // 2. 解決您說的問題：強制重設下拉選單與手動輸入框
-                const idsToReset = ['teamA-names', 'teamB-names', 'target-score-select'];
-                idsToReset.forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.selectedIndex = 0; // 強制跳回第一個選項 "--請選擇--"
-                });
-
-                const manualsToClear = ['teamA-manual', 'teamB-manual'];
-                manualsToClear.forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) {
-                        el.value = ""; // 清空文字
-                        el.style.display = "none"; // 隱藏輸入框
-                    }
-                });
-
-                // 3. 返回頁面
-                showPage('court-selection'); // 或是您的 'court-selection-page'
-
-            } catch (e) {
-                console.error("清空出錯:", e);
-            }
+            await setDoc(doc(db, "games", currentCourt), { nameA: "準備中", nameB: "準備中", scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, currentSet: 1, judgeName: "", history: [], isWaitingNext: false, server: 'A' });
+            showPage('court-selection-page');
         }
     };
 
@@ -717,5 +682,4 @@
 </script>
 </body>
 </html>
-
 
