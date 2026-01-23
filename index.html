@@ -490,31 +490,39 @@
     window.finishGame = async () => {
         if(!confirm("確定結束比賽並清空場地嗎？")) return;
         try {
-            // 1. 清空資料庫中的賽事資訊
+            // 1. 更新 Firebase 資料庫
             await updateDoc(doc(db, "games", currentCourt), {
-                nameA: "準備中", nameB: "準備中",
-                scoreA: 0, scoreB: 0, setsA: 0, setsB: 0,
-                currentSet: 1, history: [], isWaitingNext: false,
+                nameA: "準備中", 
+                nameB: "準備中",
+                scoreA: 0, 
+                scoreB: 0, 
+                setsA: 0, 
+                setsB: 0,
+                currentSet: 1, 
+                history: [], 
+                isWaitingNext: false,
                 judgeName: "無"
             });
 
-            // 2. --- 新增修正：重設前端下拉選單與輸入框 ---
-            // 重設隊伍 A 的選擇與手動輸入框
-            document.getElementById('teamA-names').value = ""; 
-            document.getElementById('teamA-manual').value = "";
-            document.getElementById('teamA-manual').style.display = "none";
+            // 2. 重設前端頁面上的所有選單與輸入框
+            const elementsToReset = [
+                'teamA-names', 'teamB-names', 'teamA-manual', 'teamB-manual'
+            ];
+            
+            elementsToReset.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.value = "";
+                    if (id.includes('manual')) el.style.display = "none";
+                }
+            });
 
-            // 重設隊伍 B 的選擇與手動輸入框
-            document.getElementById('teamB-names').value = "";
-            document.getElementById('teamB-manual').value = "";
-            document.getElementById('teamB-manual').style.display = "none";
+            const targetScoreSelect = document.getElementById('target-score-select');
+            if (targetScoreSelect) targetScoreSelect.value = "11";
 
-            // 重設規則選擇 (選回預設的 11分)
-            document.getElementById('target-score-select').value = "11";
-            // ------------------------------------------
-
-            // 3. 回到場地選擇頁面
+            // 3. 返回場地選擇頁面
             showPage('court-selection'); 
+
         } catch (e) { 
             console.error("清空失敗:", e);
             alert("清空失敗，請檢查網路連線"); 
