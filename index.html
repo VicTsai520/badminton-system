@@ -513,8 +513,12 @@
             document.getElementById('target-score-select').value = "11";
             // ------------------------------------------
 
-            showPage('court-selection'); // 回到場地選擇頁面
-        } catch (e) { alert("清空失敗"); }
+            // 3. 回到場地選擇頁面
+            showPage('court-selection'); 
+        } catch (e) { 
+            console.error("清空失敗:", e);
+            alert("清空失敗，請檢查網路連線"); 
+        }
     };
 
     window.resetMatch = async () => { if(confirm("重設本局？")) await updateDoc(doc(db, "games", currentCourt), { scoreA: 0, scoreB: 0, history: [], isWaitingNext: false }); };
