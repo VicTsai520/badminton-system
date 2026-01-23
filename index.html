@@ -177,7 +177,7 @@
             <button class="btn btn-outline" onclick="manualServe()">🏸 發球權</button>
             <button class="btn btn-secondary" onclick="resetMatch()">⚠️ 重設</button>
         </div>
-        <button class="btn btn-secondary" style="margin-top:20px; width:100%;" onclick="finishGame()">結束並清空場地</button>
+        <button class="btn btn-gray" style="width: 100%; max-width: 500px;" onclick="clearCourtData()">🔚 結束並清空場地</button>
     </div>
 
     <div id="player-hub-page" class="page">
@@ -481,49 +481,19 @@
 
         if (nSetsA >= threshold || nSetsB >= threshold) {
             alert(`比賽結束！恭喜 ${nSetsA >= threshold ? d.nameA : d.nameB} 獲勝！`);
-            await finishGame(true);
+            await clearCourtData(true);
         } else {
             await updateDoc(ref, { setsA: nSetsA, setsB: nSetsB, scoreA: 0, scoreB: 0, currentSet: d.currentSet + 1, isWaitingNext: false, history: [] });
         }
     };
-    window.finishGame = async () => {
-        if(!confirm("確定結束比賽並清空場地嗎？")) return;
-        try {
-            // 1. 先清空資料庫
-            await updateDoc(doc(db, "games", currentCourt), {
-                nameA: "準備中", nameB: "準備中",
-                scoreA: 0, scoreB: 0, setsA: 0, setsB: 0,
-                currentSet: 1, history: [], isWaitingNext: false,
-                judgeName: "無"
-            });
 
-            // 2. 安全重設前端欄位 (加上 if 判斷，防止找不到欄位而崩潰)
-            const resetMenu = (id) => {
-                const el = document.getElementById(id);
-                if (el) el.selectedIndex = 0;
-            };
-            const resetInput = (id, isManual = false) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.value = "";
-                    if (isManual) el.style.display = "none";
-                }
-            };
-
-            resetMenu('teamA-names');
-            resetMenu('teamB-names');
-            resetMenu('target-score-select');
-            resetInput('teamA-manual', true);
-            resetInput('teamB-manual', true);
-
-            // 3. 跳轉頁面
-            showPage('court-selection');
-
-        } catch (e) {
-            console.error("真正的錯誤原因:", e);
-            alert("系統重設時發生錯誤，請重新整理網頁");
+    window.clearCourtData = async (auto = false) => {
+        if(auto || confirm("確定清空場地？")) {
+            await setDoc(doc(db, "games", currentCourt), { nameA: "準備中", nameB: "準備中", scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, currentSet: 1, judgeName: "", history: [], isWaitingNext: false, server: 'A' });
+            showPage('court-selection-page');
         }
     };
+
     window.resetMatch = async () => { if(confirm("重設本局？")) await updateDoc(doc(db, "games", currentCourt), { scoreA: 0, scoreB: 0, history: [], isWaitingNext: false }); };
     window.manualServe = async () => { const ref = doc(db, "games", currentCourt); const d = (await getDoc(ref)).data(); await updateDoc(ref, { server: d.server==='A'?'B':'A' }); };
     window.switchSide = async () => {
@@ -711,5 +681,4 @@
 </script>
 </body>
 </html>
-
 
