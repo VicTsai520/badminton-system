@@ -624,8 +624,28 @@
                 
                 card.style.opacity = isReady ? "0.6" : "1";
                 
-                const btn = document.getElementById(`court-btn-${id}`);
-                if(btn) btn.style.borderColor = isReady ? "#eee" : "var(--secondary)";
+                const btn = document.getElementById(`court-selection-btn-${id}`);
+                if (btn) {
+                    const isReady = d.nameA === "準備中";
+                    
+                    // 新增：判斷裁判姓名顯示
+                    const judgeStatus = (d.judgeName && d.judgeName !== "無") 
+                        ? `<div style="font-size:0.75rem; color:#ff6b6b; margin-top:4px; font-weight:bold;">● ${d.judgeName} 使用中</div>` 
+                        : `<div style="font-size:0.75rem; color:#999; margin-top:4px;">(無人使用)</div>`;
+
+                    // 替換原本的內容，改用排版較好的格式
+                    btn.innerHTML = `
+                        <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
+                            <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                                <span>場地 ${id}</span>
+                                <span style="font-size:0.8rem; font-weight:normal; color:${isReady ? '#999' : '#ff6b6b'}">
+                                    ${isReady ? '待機中' : '比賽中'}
+                                </span>
+                            </div>
+                            ${judgeStatus}
+                        </div>
+                    `;
+                }
             }
         });
     });
