@@ -612,7 +612,13 @@
                         </div>
                         
                         <div style="font-size: 0.7rem; color: #999; height: 1.5rem; display: flex; align-items: center; white-space: nowrap;">
-                            ${isReady ? '' : (d.judgeName && d.judgeName !== "無" ? `<span style="color:#ff6b6b; font-weight:bold;">● 計分中: ${d.judgeName}</span>` : '裁判: 無')}
+                            ${isReady ? 
+                                '<span style="color: #999;">待機中</span>' : 
+                                (d.judgeName && d.judgeName !== "無" ? 
+                                    `<span style="color: #ff6b6b; font-weight: bold; background: #fff0f0; padding: 2px 6px; border-radius: 4px; border: 1px solid #ffcfcf;">● ${d.judgeName} 計分中</span>` : 
+                                    '<span style="color: #999;">裁判: 無</span>'
+                                )
+                            }
                         </div>
                     </div>`;
                 
