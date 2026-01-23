@@ -107,23 +107,20 @@
         <h2 id="pre-game-title" style="text-align: center; color: var(--primary); margin-bottom: 25px;">場地設定</h2>
         <div class="admin-box">
             <label>隊伍 A</label>
-            <select id="teamA-names" onchange="checkManualName('A')">
-                <option value="">-- 請選擇選手 --</option>
-                <option value="選手1">選手1</option>
-                <option value="選手2">選手2</option>
+            <select id="teamA-names" class="input-field" onchange="checkManualName('A')">
+                <option value="">-- 請選擇選手 (A) --</option>
+                <option value="選手 1">選手 1</option>
                 <option value="manual">-- 手動輸入 --</option>
             </select>
-            <input type="text" id="teamA-manual" placeholder="請輸入選手姓名" style="display:none; margin-top:5px;">
-
-            <div style="text-align:center; margin:10px 0; font-weight:bold; opacity:0.5;">VS</div>
-
-            <label>隊伍 B</label>
-            <select id="teamB-names" onchange="checkManualName('B')">
-                <option value="">-- 請選擇選手 --</option>
-                <option value="選手3">選手3</option>
-                <option value="選手4">選手4</option>
+            <input type="text" id="teamA-manual" class="input-field" style="display:none;" placeholder="請輸入 A 隊姓名">
+            
+            <select id="teamB-names" class="input-field" onchange="checkManualName('B')">
+                <option value="">-- 請選擇選手 (B) --</option>
+                <option value="選手 2">選手 2</option>
                 <option value="manual">-- 手動輸入 --</option>
             </select>
+            <input type="text" id="teamB-manual" class="input-field" style="display:none;" placeholder="請輸入 B 隊姓名">
+            
             <input type="text" id="teamB-manual" placeholder="請輸入選手姓名" style="display:none; margin-top:5px;">
             <div class="input-group" style="margin-top: 30px; margin-bottom: 30px;"> 
                 <label style="margin-bottom: 12px; display: block;">目前比賽規則</label>
@@ -293,14 +290,15 @@
     
     window.checkManualName = (team) => {
         const sel = document.getElementById(`team${team}-names`);
+        // 這裡必須對應 HTML 裡的 ID (teamA-manual 或 teamB-manual)
         const manualInput = document.getElementById(`team${team}-manual`);
         
         if (sel && manualInput) {
             if (sel.value === 'manual') {
-                manualInput.style.display = 'block'; // 顯示輸入框
-                manualInput.focus(); // 自動聚焦方便輸入
+                manualInput.style.display = 'block'; // 顯示
+                manualInput.focus();
             } else {
-                manualInput.style.display = 'none'; // 隱藏輸入框
+                manualInput.style.display = 'none'; // 隱藏
             }
         }
     };
@@ -352,26 +350,30 @@
 
     window.startMatch = async () => {
         // --- 這裡就是你問的那段邏輯，直接整合進來了 ---
-        const getFinalName = (teamId) => {
-            const sel = document.getElementById(`team${teamId}-names`).value;
-            const manual = document.getElementById(`team${teamId}-manual`).value;
-            // 如果選單選「manual」就用手動輸入的值，否則用選單的值
-            return (sel === 'manual') ? (manual || `選手 ${teamId}`) : (sel || `${teamId} 隊`);
+        const getFinalName = (id) => {
+            const sV = document.getElementById(`team${id}-names`).value;
+            const mV = document.getElementById(`team${id}-manual`).value;
+            return (sV === 'manual') ? (mV || `選手 ${id}`) : (sV || `${id} 隊`);
         };
 
-        const nA = getFinalName('A'); // 取得 A 隊最終名稱
-        const nB = getFinalName('B'); // 取得 B 隊最終名稱
+        const nA = getFinalName('A'); // 抓取最終人名
+        const nB = getFinalName('B'); // 抓取最終人名
         const target = parseInt(document.getElementById('target-score-select').value);
+
         try {
             const configSnap = await getDoc(doc(db, "config", "match_settings"));
             const globalSets = configSnap.exists() ? configSnap.data().defaultTotalSets : 3;
+            
             await updateDoc(doc(db, "games", currentCourt), {
                 nameA: nA, nameB: nB, scoreA: 0, scoreB: 0, setsA: 0, setsB: 0,
                 currentSet: 1, totalSets: globalSets, targetScore: target,
                 server: 'A', history: [], isWaitingNext: false, judgeName: loggedJudge
             });
             showPage('scoring-page');
-        } catch (e) { console.error(e); alert("啟動失敗"); }
+        } catch (e) { 
+            console.error(e);
+            alert("啟動失敗"); 
+        }
     };
 
     function listenToCourt(id) {
