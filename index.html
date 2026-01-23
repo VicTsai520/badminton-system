@@ -303,6 +303,23 @@
 
     // 選場地邏輯
     window.selectCourt = async (id) => {
+        // --- [新增：防呆檢查開始] ---
+        try {
+            const ref = doc(db, "games", id);
+            const snap = await getDoc(ref);
+            
+            if (snap.exists()) {
+                const data = snap.data();
+                // 如果場地已有裁判，且該裁判不是你目前登入的姓名，且該場地不是「準備中」
+                if (data.judgeName && data.judgeName !== "無" && data.judgeName !== loggedJudge && data.nameA !== "準備中") {
+                    const proceed = confirm(`警報：${data.judgeName} 裁判正在此場地計分中！\n您確定要強行取代他嗎？`);
+                    if (!proceed) return; // 點選取消則停留在原頁面
+                }
+            }
+        } catch (e) {
+            console.error("防呆檢查發生錯誤:", e);
+        }
+        // --- [新增：防呆檢查結束] ---
         currentCourt = id;
         listenToCourt(id);
         const ref = doc(db, "games", id);
@@ -328,6 +345,7 @@
             
             showPage('pre-game-page');
         }
+        
     };
 
     window.updatePreGameTitle = async () => {
@@ -492,7 +510,6 @@
     };
     window.checkManualName = (type) => {
         let sel, manualInput;
-        
         if (type === 'staff') {
             // 裁判登記頁面的 ID
             sel = document.getElementById('staff-name-list');
@@ -595,7 +612,7 @@
                         </div>
                         
                         <div style="font-size: 0.7rem; color: #999; height: 1.5rem; display: flex; align-items: center; white-space: nowrap;">
-                            ${isReady ? '' : '裁判: ' + (d.judgeName || '無')}
+                            ${isReady ? '' : (d.judgeName && d.judgeName !== "無" ? `<span style="color:#ff6b6b; font-weight:bold;">● 計分中: ${d.judgeName}</span>` : '裁判: 無')}
                         </div>
                     </div>`;
                 
