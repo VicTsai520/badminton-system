@@ -358,31 +358,48 @@
     };
 
     window.startMatch = async () => {
-        // --- 這裡就是你問的那段邏輯，直接整合進來了 ---
-        const getFinalName = (teamId) => {
-            const sel = document.getElementById(`team${teamId}-names`);
-            const manual = document.getElementById(`team${teamId}-manual`);
-
-            // 如果選單選「manual」就用手動輸入的值，否則用選單的值
+        // --- 修正核心：判斷如果選單是 manual，就改抓 manual 輸入框的值 ---
+        const getFinalName = (type) => {
+            const selValue = document.getElementById(`team${type}-names`).value;
+            const manualValue = document.getElementById(`team${type}-manual`).value;
+            
+            // 當選單選中 "manual" 時
             if (selValue === 'manual') {
-                return manualValue || `選手 ${type}`; // 如果手動輸入是空的，給個預設名
+                // 回傳手動輸入框的內容，如果沒打字就回傳預設名
+                return manualValue.trim() || `選手 ${type}`; 
             }
+            // 否則回傳選單選中的名字
             return selValue || `${type} 隊`;
         };
 
-        const nA = document.getElementById('teamA-names').value || "A 隊";
-        const nB = document.getElementById('teamB-names').value || "B 隊";
+        const nA = getFinalName('A');
+        const nB = getFinalName('B');
+        // ---------------------------------------------------------
+
         const target = parseInt(document.getElementById('target-score-select').value);
         try {
             const configSnap = await getDoc(doc(db, "config", "match_settings"));
             const globalSets = configSnap.exists() ? configSnap.data().defaultTotalSets : 3;
             await updateDoc(doc(db, "games", currentCourt), {
-                nameA: nA, nameB: nB, scoreA: 0, scoreB: 0, setsA: 0, setsB: 0,
-                currentSet: 1, totalSets: globalSets, targetScore: target,
-                server: 'A', history: [], isWaitingNext: false, judgeName: loggedJudge
+                nameA: nA, 
+                nameB: nB, 
+                scoreA: 0, 
+                scoreB: 0, 
+                setsA: 0, 
+                setsB: 0,
+                currentSet: 1, 
+                totalSets: globalSets, 
+                targetScore: target,
+                server: 'A', 
+                history: [], 
+                isWaitingNext: false, 
+                judgeName: loggedJudge
             });
             showPage('scoring-page');
-        } catch (e) { alert("啟動失敗"); }
+        } catch (e) { 
+            console.error(e);
+            alert("啟動失敗"); 
+        }
     };
 
     function listenToCourt(id) {
