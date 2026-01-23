@@ -624,17 +624,17 @@
                 
                 card.style.opacity = isReady ? "0.6" : "1";
                 
-                const btn = document.getElementById(`court-selection-btn-${id}`);
-                if (btn) {
+                // --- 這裡開始替換 ---
+                const selBtn = document.getElementById(`court-selection-btn-${id}`);
+                if (selBtn) {
                     const isReady = d.nameA === "準備中";
-                    
-                    // 這裡定義變數名稱為 judgeStatus
+                    // 1. 定義裁判狀態文字
                     const judgeStatus = (d.judgeName && d.judgeName !== "無") 
                         ? `<div style="font-size:0.75rem; color:#ff6b6b; margin-top:4px; font-weight:bold;">● ${d.judgeName} 使用中</div>` 
-                        : `<div style="font-size:0.75rem; color:#999; margin-top:4px;">(無人使用)</div>`;
+                        : `<div style="font-size:0.75rem; color:#999; margin-top:4px;">(尚未有裁判使用)</div>`;
 
-                    // 替換原本的內容，下方確保使用 ${judgeStatus}
-                    btn.innerHTML = `
+                    // 2. 渲染按鈕 HTML (包含場地號碼、狀態、以及裁判名)
+                    selBtn.innerHTML = `
                         <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
                             <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
                                 <span style="font-size:1.1rem;">場地 ${id}</span>
@@ -642,10 +642,11 @@
                                     ${isReady ? '待機中' : '比賽中'}
                                 </span>
                             </div>
-                            ${judgeStatus} 
+                            ${judgeStatus}
                         </div>
                     `;
                 }
+                // --- 替換結束，請確保後面沒有重複的 selBtn 指令 ---
             }
         });
     });
