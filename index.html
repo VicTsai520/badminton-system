@@ -481,17 +481,40 @@
 
         if (nSetsA >= threshold || nSetsB >= threshold) {
             alert(`比賽結束！恭喜 ${nSetsA >= threshold ? d.nameA : d.nameB} 獲勝！`);
-            await clearCourtData(true);
+            await finishGame(true);
         } else {
             await updateDoc(ref, { setsA: nSetsA, setsB: nSetsB, scoreA: 0, scoreB: 0, currentSet: d.currentSet + 1, isWaitingNext: false, history: [] });
         }
     };
 
-    window.clearCourtData = async (auto = false) => {
-        if(auto || confirm("確定清空場地？")) {
-            await setDoc(doc(db, "games", currentCourt), { nameA: "準備中", nameB: "準備中", scoreA: 0, scoreB: 0, setsA: 0, setsB: 0, currentSet: 1, judgeName: "", history: [], isWaitingNext: false, server: 'A' });
-            showPage('court-selection-page');
-        }
+    window.finishGame = async () => {
+        if(!confirm("確定結束比賽並清空場地嗎？")) return;
+        try {
+            // 1. 清空資料庫中的賽事資訊
+            await updateDoc(doc(db, "games", currentCourt), {
+                nameA: "準備中", nameB: "準備中",
+                scoreA: 0, scoreB: 0, setsA: 0, setsB: 0,
+                currentSet: 1, history: [], isWaitingNext: false,
+                judgeName: "無"
+            });
+
+            // 2. --- 新增修正：重設前端下拉選單與輸入框 ---
+            // 重設隊伍 A 的選擇與手動輸入框
+            document.getElementById('teamA-names').value = ""; 
+            document.getElementById('teamA-manual').value = "";
+            document.getElementById('teamA-manual').style.display = "none";
+
+            // 重設隊伍 B 的選擇與手動輸入框
+            document.getElementById('teamB-names').value = "";
+            document.getElementById('teamB-manual').value = "";
+            document.getElementById('teamB-manual').style.display = "none";
+
+            // 重設規則選擇 (選回預設的 11分)
+            document.getElementById('target-score-select').value = "11";
+            // ------------------------------------------
+
+            showPage('court-selection'); // 回到場地選擇頁面
+        } catch (e) { alert("清空失敗"); }
     };
 
     window.resetMatch = async () => { if(confirm("重設本局？")) await updateDoc(doc(db, "games", currentCourt), { scoreA: 0, scoreB: 0, history: [], isWaitingNext: false }); };
