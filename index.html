@@ -362,8 +362,12 @@
         const getFinalName = (teamId) => {
             const sel = document.getElementById(`team${teamId}-names`).value;
             const manual = document.getElementById(`team${teamId}-manual`).value;
+
             // 如果選單選「manual」就用手動輸入的值，否則用選單的值
-            return (sel === 'manual') ? (manual || `自定義選手 ${teamId}`) : (sel || `${teamId} 隊`);
+            if (selValue === 'manual') {
+                return manualValue || `選手 ${type}`; // 如果手動輸入是空的，給個預設名
+            }
+            return selValue || `${type} 隊`;
         };
 
         const nA = document.getElementById('teamA-names').value || "A 隊";
