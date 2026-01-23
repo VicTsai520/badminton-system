@@ -290,7 +290,20 @@
     };
     window.verifyStaff = () => { if(document.getElementById('staff-pass').value === '0000') showPage('staff-select-page'); else alert('密碼錯誤'); };
     window.adminLogin = () => { if(prompt("管理密碼") === '9999') showPage('admin-master-page'); };
-
+    
+    window.checkManualName = (team) => {
+        const sel = document.getElementById(`team${team}-names`);
+        const manualInput = document.getElementById(`team${team}-manual`);
+        
+        if (sel && manualInput) {
+            if (sel.value === 'manual') {
+                manualInput.style.display = 'block'; // 顯示輸入框
+                manualInput.focus(); // 自動聚焦方便輸入
+            } else {
+                manualInput.style.display = 'none'; // 隱藏輸入框
+            }
+        }
+    };
     window.confirmStaff = () => {
         const sel = document.getElementById('staff-name-list').value;
         loggedJudge = (sel === '其他') ? document.getElementById('staff-name-manual').value : sel;
@@ -346,8 +359,8 @@
             return (sel === 'manual') ? (manual || `選手 ${teamId}`) : (sel || `${teamId} 隊`);
         };
 
-        const nA = document.getElementById('teamA-names').value || "A 隊";
-        const nB = document.getElementById('teamB-names').value || "B 隊";
+        const nA = getFinalName('A'); // 取得 A 隊最終名稱
+        const nB = getFinalName('B'); // 取得 B 隊最終名稱
         const target = parseInt(document.getElementById('target-score-select').value);
         try {
             const configSnap = await getDoc(doc(db, "config", "match_settings"));
@@ -358,7 +371,7 @@
                 server: 'A', history: [], isWaitingNext: false, judgeName: loggedJudge
             });
             showPage('scoring-page');
-        } catch (e) { alert("啟動失敗"); }
+        } catch (e) { console.error(e); alert("啟動失敗"); }
     };
 
     function listenToCourt(id) {
@@ -488,20 +501,7 @@
             alert("❌ 套用失敗，請檢查資料庫權限");
         }
     };
-    window.checkManualName = (team) => {
-        const sel = document.getElementById(`team${team}-names`);
-        const manualInput = document.getElementById(`team${team}-manual`);
-        
-        if (sel && manualInput) {
-            if (sel.value === 'manual') {
-                manualInput.style.display = 'block'; // 顯示輸入框
-                manualInput.focus(); // 自動聚焦方便輸入
-            } else {
-                manualInput.style.display = 'none'; // 隱藏輸入框
-            }
-        }
-    };
-
+    
     window.publishNotice = async () => {
         const h = document.getElementById('admin-home-img-url').value;
         const a = document.getElementById('admin-announcement').value;
