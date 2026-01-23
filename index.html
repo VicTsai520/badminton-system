@@ -77,7 +77,7 @@
     <div id="staff-select-page" class="page">
         <h2>裁判登記</h2>
         <div class="admin-box">
-            <select id="staff-name-list">
+            <select id="staff-name-list" class="input-field" onchange="checkStaffManual()">
                 <option value="">-- 請選擇您的姓名 --</option>
                 <option value="Vic">Vic</option>
                 <option value="Howard">Howard</option> 
@@ -85,7 +85,7 @@
                 <option value="Alice">Alice</option>
                 <option value="其他">手動輸入...</option>
             </select>
-            <input type="text" id="staff-name-manual" placeholder="請在此輸入您的姓名" style="display:none; margin-top:10px;">
+            <input type="text" id="staff-name-manual" class="input-field" placeholder="請在此輸入您的姓名" style="display:none; margin-top:10px;">
             <button class="btn btn-primary" style="width:100%; margin-top:15px;" onclick="confirmStaff()">確定進入</button>
         </div>
     </div>
@@ -120,7 +120,7 @@
                 <option value="manual">-- 手動輸入 --</option>
             </select>
             <input type="text" id="teamB-manual" class="input-field" style="display:none;" placeholder="請輸入 B 隊姓名">
-            
+
             <input type="text" id="teamB-manual" placeholder="請輸入選手姓名" style="display:none; margin-top:5px;">
             <div class="input-group" style="margin-top: 30px; margin-bottom: 30px;"> 
                 <label style="margin-bottom: 12px; display: block;">目前比賽規則</label>
