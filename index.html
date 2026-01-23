@@ -489,42 +489,41 @@
     window.finishGame = async () => {
         if(!confirm("確定結束比賽並清空場地嗎？")) return;
         try {
-            // 1. 先更新資料庫
+            // 1. 先清空資料庫
             await updateDoc(doc(db, "games", currentCourt), {
-                nameA: "準備中", 
-                nameB: "準備中",
-                scoreA: 0, 
-                scoreB: 0, 
-                setsA: 0, 
-                setsB: 0,
-                currentSet: 1, 
-                history: [], 
-                isWaitingNext: false,
+                nameA: "準備中", nameB: "準備中",
+                scoreA: 0, scoreB: 0, setsA: 0, setsB: 0,
+                currentSet: 1, history: [], isWaitingNext: false,
                 judgeName: "無"
             });
 
-            // 2. 緊接著重設前端所有欄位 (必須在函式結束的括號內)
-            const selA = document.getElementById('teamA-names');
-            if(selA) selA.selectedIndex = 0; 
-            const inpA = document.getElementById('teamA-manual');
-            if(inpA) { inpA.value = ""; inpA.style.display = "none"; }
+            // 2. 安全重設前端欄位 (加上 if 判斷，防止找不到欄位而崩潰)
+            const resetMenu = (id) => {
+                const el = document.getElementById(id);
+                if (el) el.selectedIndex = 0;
+            };
+            const resetInput = (id, isManual = false) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.value = "";
+                    if (isManual) el.style.display = "none";
+                }
+            };
 
-            const selB = document.getElementById('teamB-names');
-            if(selB) selB.selectedIndex = 0;
-            const inpB = document.getElementById('teamB-manual');
-            if(inpB) { inpB.value = ""; inpB.style.display = "none"; }
+            resetMenu('teamA-names');
+            resetMenu('teamB-names');
+            resetMenu('target-score-select');
+            resetInput('teamA-manual', true);
+            resetInput('teamB-manual', true);
 
-            const ts = document.getElementById('target-score-select');
-            if (ts) ts.selectedIndex = 0;
+            // 3. 跳轉頁面
+            showPage('court-selection');
 
-            // 3. 最後才切換頁面
-            showPage('court-selection'); 
-
-        } catch (e) { 
-            console.error("清空失敗:", e);
-            alert("清空失敗，請檢查網路連線"); 
+        } catch (e) {
+            console.error("真正的錯誤原因:", e);
+            alert("系統重設時發生錯誤，請重新整理網頁");
         }
-    }; // 正確的結束位置
+    };
     window.resetMatch = async () => { if(confirm("重設本局？")) await updateDoc(doc(db, "games", currentCourt), { scoreA: 0, scoreB: 0, history: [], isWaitingNext: false }); };
     window.manualServe = async () => { const ref = doc(db, "games", currentCourt); const d = (await getDoc(ref)).data(); await updateDoc(ref, { server: d.server==='A'?'B':'A' }); };
     window.switchSide = async () => {
